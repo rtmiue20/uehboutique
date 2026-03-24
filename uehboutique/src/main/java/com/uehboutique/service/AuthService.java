@@ -14,7 +14,7 @@ public class AuthService {
         // 1. Tìm nhân viên theo username
         Staff staff = staffRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Wrong username or password")) ;
-        // 2. Kiểm tra password (Bác nào làm kỹ thì dùng PasswordEncoder, ở đây so sánh chuỗi cơ bản)
+        // 2. Kiểm tra password (ở đây so sánh chuỗi cơ bản)
         if(!staff.getPassword().equals(password)){
             throw new RuntimeException("Wrong username or password");
         }

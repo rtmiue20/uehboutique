@@ -6,6 +6,8 @@ import com.uehboutique.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import javax.swing.text.html.parser.Entity;
 import java.util.List;
 
 @RestController
@@ -34,6 +36,7 @@ public class RoomController {
             return ResponseEntity.badRequest().body("Mistakes made while cleaning the room: " + e.getMessage());
         }
     }
+
 
     // 2. Thêm phòng mới (VD: Khách sạn xây thêm phòng 107)
     // Dùng @RequestBody vì truyền một cục JSON
