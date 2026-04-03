@@ -189,8 +189,8 @@ function BookingInfo() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead style={{ backgroundColor: '#83b5b7', color: '#1a4e52' }}>
                     <tr>
-                        <th style={thStyle}>MÃ KH</th>
-                        <th style={{...thStyle, textAlign: 'left'}}>TÊN KH</th>
+                        <th style={thStyle}>MÃ KHÁCH HÀNG</th>
+                        <th style={{...thStyle, textAlign: 'left'}}>TÊN KHÁCH HÀNG</th>
                         <th style={thStyle}>SỐ ĐIỆN THOẠI</th>
                         <th style={thStyle}>CHECK IN</th>
                         <th style={thStyle}>CHECK OUT</th>

@@ -5,7 +5,7 @@ function Layout() {
 
     // Danh sách các tab menu
     const menuItems = [
-        { path: '/home', label: '🏠 Trang chủ' },
+        { path: '/home', label: 'Trang chủ' },
         { path: '/booking', label: 'Thông tin đặt phòng' },
         { path: '/rooms', label: 'Tình trạng phòng' },
         { path: '/services', label: 'Dịch vụ' },

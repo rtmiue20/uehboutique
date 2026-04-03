@@ -65,7 +65,7 @@ function Dashboard() {
     return (
         <div style={{ padding: '30px', backgroundColor: '#f4f7f6', minHeight: '100vh', fontFamily: "'Segoe UI', Tahoma, sans-serif" }}>
             <h2 style={{ color: '#125c61', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                📊 Tổng Quan Hệ Thống UEH Boutique
+                Tổng Quan Hệ Thống UEH Boutique
             </h2>
 
             {/* --- HÀNG THẺ THỐNG KÊ (STATS CARDS) --- */}
