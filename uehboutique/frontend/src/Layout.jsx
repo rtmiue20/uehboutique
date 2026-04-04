@@ -1,7 +1,11 @@
+import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 
 function Layout() {
     const location = useLocation(); // Dùng để biết đang ở trang nào để bôi đậm Menu
+
+    // Thêm state để quản lý việc đóng/mở menu của user
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // Danh sách các tab menu
     const menuItems = [
@@ -49,13 +53,47 @@ function Layout() {
                     );
                 })}
 
-                {/* Nút User bên góc phải */}
-                <div style={{ position: 'absolute', right: '30px', display: 'flex', alignItems: 'center', color: 'white', fontWeight: 'bold' }}>
-                    Hi, Trieu!
-                    <div style={{
-                        backgroundColor: '#f39c12', color: 'white', borderRadius: '50%', width: '35px', height: '35px',
-                        display: 'flex', justifyContent: 'center', alignItems: 'center', marginLeft: '10px', fontSize: '18px'
-                    }}>👤</div>
+                {/* --- Nút User bên góc phải (Đã được nâng cấp thành Dropdown) --- */}
+                <div style={{ position: 'absolute', right: '30px' }}>
+                    {/* Phần hiển thị tên và avatar (Click vào để mở menu) */}
+                    <div
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        style={{ display: 'flex', alignItems: 'center', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                        Hi, Trieu!
+                        <div style={{
+                            backgroundColor: '#f39c12', color: 'white', borderRadius: '50%', width: '35px', height: '35px',
+                            display: 'flex', justifyContent: 'center', alignItems: 'center', marginLeft: '10px', fontSize: '18px'
+                        }}>👤</div>
+                    </div>
+
+                    {/* Khung Dropdown Menu (Chỉ hiện khi isMenuOpen = true) */}
+                    {isMenuOpen && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '50px', // Đẩy xuống dưới một chút để không đè lên avatar
+                            right: '0',
+                            backgroundColor: 'white',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                            borderRadius: '8px',
+                            width: '180px',
+                            overflow: 'hidden',
+                            zIndex: 1000
+                        }}>
+                            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                                <li style={dropdownItemStyle} onClick={() => { alert("Tính năng đang phát triển!"); setIsMenuOpen(false); }}>
+                                    ✏️ Sửa thông tin
+                                </li>
+                                <li style={dropdownItemStyle} onClick={() => { alert("Tính năng đang phát triển!"); setIsMenuOpen(false); }}>
+                                    🔒 Đổi mật khẩu
+                                </li>
+                                <li style={{ ...dropdownItemStyle, color: '#e74c3c', borderTop: '1px solid #eee' }}
+                                    onClick={() => window.location.href = '/'}>
+                                    🚪 Đăng xuất
+                                </li>
+                            </ul>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -66,5 +104,15 @@ function Layout() {
         </div>
     );
 }
+
+// CSS cho các mục trong Menu xổ xuống
+const dropdownItemStyle = {
+    padding: '12px 15px',
+    cursor: 'pointer',
+    color: '#333',
+    fontSize: '14px',
+    fontWeight: 'normal',
+    transition: 'background 0.2s',
+};
 
 export default Layout;

@@ -19,38 +19,57 @@ function Dashboard() {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            // 1. Lấy dữ liệu bookings để tính toán
+
+            // 1. Lấy dữ liệu bookings
             const bookingsRes = await axios.get('http://localhost:8080/api/bookings');
             const bookings = Array.isArray(bookingsRes.data) ? bookingsRes.data : [];
 
-            // 2. Lấy dữ liệu phòng (Giả định ông có endpoint này, nếu chưa có hãy dùng tạm số hardcode)
+            // 2. Lấy dữ liệu phòng
             let rooms = [];
             try {
                 const roomsRes = await axios.get('http://localhost:8080/api/rooms');
-                rooms = roomsRes.data;
-            } catch (e) { rooms = new Array(20).fill({}); } // Fallback nếu chưa có API phòng
+                rooms = Array.isArray(roomsRes.data) ? roomsRes.data : [];
+            } catch (e) {
+                console.warn("Chưa có API phòng, dùng data ảo.");
+                rooms = new Array(20).fill({ status: 'EMPTY' });
+            }
 
-            // --- LOGIC TÍNH TOÁN ---
+            // --- LOGIC TÍNH TOÁN ĐÃ ĐƯỢC FIX ---
             const today = new Date().toISOString().split('T')[0];
 
-            const occupied = bookings.filter(b => b.status === 'Checked-in').length;
+            // FIX 1: Đếm phòng đang ở dựa vào API rooms (chính xác hơn với sơ đồ). 
+            // Cover luôn các trường hợp chữ hoa/thường hoặc tên trạng thái khác nhau.
+            let occupied = 0;
+            if (rooms.length > 0 && rooms[0].status) {
+                occupied = rooms.filter(r =>
+                    r.status.toUpperCase() === 'CURRENTLY' ||
+                    r.status.toUpperCase() === 'OCCUPIED' ||
+                    r.status.toUpperCase() === 'CHECKED-IN'
+                ).length;
+            } else {
+                // Fallback: nếu room không có status, đếm từ bookings
+                occupied = bookings.filter(b => b.status && b.status.toLowerCase() === 'checked-in').length;
+            }
+
             const checkinsToday = bookings.filter(b => b.checkInDate === today).length;
 
-            // Tính sơ bộ doanh thu từ các booking (nếu cần)
             const revenue = bookings.reduce((sum, b) => {
-                // Chỉ tính các đơn đã check-out/thanh toán (tùy logic của ông)
-                return (b.status === 'Checked-out' || b.status === 'Check-out') ? sum + (b.totalAmount || 0) : sum;
+                const isPaid = b.status && (b.status.toLowerCase() === 'checked-out' || b.status.toLowerCase() === 'check-out');
+                return isPaid ? sum + (b.totalAmount || 0) : sum;
             }, 0);
 
+            // Xử lý tổng số phòng thực tế (tránh lỗi chia cho 0)
+            const total = rooms.length > 0 ? rooms.length : 20;
+
             setStats({
-                totalRooms: rooms.length,
+                totalRooms: total,
                 occupiedRooms: occupied,
-                availableRooms: rooms.length - occupied,
+                availableRooms: total - occupied,
                 todayCheckIns: checkinsToday,
                 totalRevenue: revenue
             });
 
-            setRecentBookings(bookings.slice(0, 5)); // Lấy 5 booking mới nhất
+            setRecentBookings(bookings.slice(0, 5));
             setLoading(false);
         } catch (error) {
             console.error("Lỗi tải dữ liệu Dashboard:", error);
@@ -68,7 +87,6 @@ function Dashboard() {
                 Tổng Quan Hệ Thống UEH Boutique
             </h2>
 
-            {/* --- HÀNG THẺ THỐNG KÊ (STATS CARDS) --- */}
             <div style={statsGridStyle}>
                 <div style={{ ...cardStyle, borderLeft: '5px solid #2ecc71' }}>
                     <span style={cardLabelStyle}>Phòng Trống</span>
@@ -78,7 +96,7 @@ function Dashboard() {
                 <div style={{ ...cardStyle, borderLeft: '5px solid #e74c3c' }}>
                     <span style={cardLabelStyle}>Phòng Đang Ở</span>
                     <h2 style={{ color: '#e74c3c', margin: '10px 0' }}>{stats.occupiedRooms}</h2>
-                    <small>Công suất: {Math.round((stats.occupiedRooms / stats.totalRooms) * 100) || 0}%</small>
+                    <small>Công suất: {stats.totalRooms > 0 ? Math.round((stats.occupiedRooms / stats.totalRooms) * 100) : 0}%</small>
                 </div>
                 <div style={{ ...cardStyle, borderLeft: '5px solid #f39c12' }}>
                     <span style={cardLabelStyle}>Check-in Hôm Nay</span>
@@ -93,7 +111,6 @@ function Dashboard() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '25px', marginTop: '30px' }}>
-                {/* --- DANH SÁCH ĐẶT PHÒNG GẦN ĐÂY --- */}
                 <div style={sectionStyle}>
                     <h3 style={{ marginTop: 0, color: '#333', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>Hoạt động gần đây</h3>
                     <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
@@ -106,27 +123,29 @@ function Dashboard() {
                             </tr>
                         </thead>
                         <tbody>
-                            {recentBookings.map((b, i) => (
-                                <tr key={i} style={{ borderBottom: '1px solid #f9f9f9', fontSize: '14px' }}>
-                                    <td style={{ padding: '12px 5px' }}><b>{b.guest?.guestName}</b></td>
-                                    <td><span style={roomBadgeStyle}>{b.room?.roomNumber}</span></td>
-                                    <td>{b.checkInDate}</td>
-                                    <td>
-                                        <span style={{
-                                            padding: '4px 8px', borderRadius: '12px', fontSize: '11px',
-                                            backgroundColor: b.status === 'Checked-in' ? '#e8f8f5' : '#fef9e7',
-                                            color: b.status === 'Checked-in' ? '#27ae60' : '#f39c12'
-                                        }}>
-                                            {b.status}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
+                            {recentBookings.map((b, i) => {
+                                const isCheckedIn = b.status && b.status.toLowerCase() === 'checked-in';
+                                return (
+                                    <tr key={i} style={{ borderBottom: '1px solid #f9f9f9', fontSize: '14px' }}>
+                                        <td style={{ padding: '12px 5px' }}><b>{b.guest?.guestName || 'Khách lẻ'}</b></td>
+                                        <td><span style={roomBadgeStyle}>{b.room?.roomNumber || '---'}</span></td>
+                                        <td>{b.checkInDate}</td>
+                                        <td>
+                                            <span style={{
+                                                padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
+                                                backgroundColor: isCheckedIn ? '#e8f8f5' : '#fef9e7',
+                                                color: isCheckedIn ? '#27ae60' : '#f39c12'
+                                            }}>
+                                                {b.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
 
-                {/* --- LỐI TẮT NHANH (QUICK ACTIONS) --- */}
                 <div style={sectionStyle}>
                     <h3 style={{ marginTop: 0, color: '#333' }}>Thao tác nhanh</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
