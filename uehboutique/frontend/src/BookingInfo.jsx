@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Thêm dòng này
 
 function BookingInfo() {
-    const navigate = useNavigate(); // Khai báo hook điều hướng
     const [bookings, setBookings] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const bookingsPerPage = 8;
@@ -22,7 +20,7 @@ function BookingInfo() {
     const [showGuestModal, setShowGuestModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [guestForm, setGuestForm] = useState({ guestId: '', guestName: '', phone: '' });
-    
+
     useEffect(() => {
         fetchBookings();
     }, []);
@@ -67,28 +65,20 @@ function BookingInfo() {
         setShowGuestModal(true);
     };
 
-   const handleSaveGuest = async (e) => {
-    e.preventDefault();
-    try {
-        if (isEditing) {
-            // Trường hợp SỬA: Gửi toàn bộ form bao gồm ID
-            await axios.put(`http://localhost:8080/api/guests/${guestForm.guestId}`, guestForm);
-            triggerStackedToast('success', 'Cập Nhật Thành Công', `Đã sửa: ${guestForm.guestName}`);
-        } else {
-            // Trường hợp THÊM MỚI: Loại bỏ guestId để tránh lỗi ép kiểu ở Backend
-            const { guestId, ...newGuestData } = guestForm; 
-            
-            await axios.post(`http://localhost:8080/api/guests`, newGuestData);
-            triggerStackedToast('success', 'Thêm Khách Thành Công', `Đã thêm ${guestForm.guestName}`);
-        }
-        
-        setShowGuestModal(false);
-        fetchBookings(); // Tải lại bảng
-        } 
-        catch (err) 
-        {
-            console.error("Chi tiết lỗi:", err.response?.data);
-            triggerStackedToast('error', 'Lỗi Hệ Thống', err.response?.data?.message || 'Dữ liệu không hợp lệ.');
+    const handleSaveGuest = async (e) => {
+        e.preventDefault();
+        try {
+            if (isEditing) {
+                await axios.put(`http://localhost:8080/api/guests/${guestForm.guestId}`, guestForm);
+                triggerStackedToast('success', 'Cập Nhật Thành Công', `Đã sửa thông tin khách: ${guestForm.guestName}`);
+            } else {
+                await axios.post(`http://localhost:8080/api/guests`, guestForm);
+                triggerStackedToast('success', 'Thêm Khách Thành Công', `Đã thêm ${guestForm.guestName} vào hệ thống`);
+            }
+            setShowGuestModal(false);
+            fetchBookings(); // Tải lại bảng ngay lập tức
+        } catch (err) {
+            triggerStackedToast('error', 'Lỗi Hệ Thống', 'Không thể lưu thông tin khách hàng.');
         }
     };
 
@@ -127,45 +117,18 @@ function BookingInfo() {
         }
     };
 
-    // const handleCompletePayment = async () => {
-    //     try {
-    //         await axios.post(`http://localhost:8080/api/invoices/checkout/${invoiceData.bookingId}?paymentMethod=Cash`);
+    const handleCompletePayment = async () => {
+        try {
+            await axios.post(`http://localhost:8080/api/invoices/checkout/${invoiceData.bookingId}?paymentMethod=Cash`);
 
-    //         setInvoiceData(prev => ({ ...prev, isPaid: true }));
-    //         triggerStackedToast('success', 'Thanh Toán Thành Công!', 'Đã lưu hóa đơn sang mục Quản Lý Hóa Đơn.');
-    //         fetchBookings();
-    //     } catch (err) {
-    //         triggerStackedToast('error', 'Lỗi Thanh Toán', err.response?.data || "Không thể lưu hóa đơn vào DB.");
-    //     }
-    // };
-// --- CẬP NHẬT HÀM THANH TOÁN ---
-const handleCompletePayment = async () => {
-    // Nếu hóa đơn đã được thanh toán trước đó, bấm vào là chuyển trang luôn
-    if (invoiceData.isPaid) {
-        setShowBill(false); // Đóng modal trước khi đi
-        navigate('/invoices');
-        return;
-    }
+            setInvoiceData(prev => ({ ...prev, isPaid: true }));
+            triggerStackedToast('success', 'Thanh Toán Thành Công!', 'Đã lưu hóa đơn sang mục Quản Lý Hóa Đơn.');
+            fetchBookings();
+        } catch (err) {
+            triggerStackedToast('error', 'Lỗi Thanh Toán', err.response?.data || "Không thể lưu hóa đơn vào DB.");
+        }
+    };
 
-    try {
-        // Gọi API thanh toán
-        await axios.post(`http://localhost:8080/api/invoices/checkout/${invoiceData.bookingId}?paymentMethod=Cash`);
-
-        setInvoiceData(prev => ({ ...prev, isPaid: true }));
-        triggerStackedToast('success', 'Thanh Toán Thành Công!', 'Đang chuyển đến trang quản lý hóa đơn...');
-        
-        fetchBookings(); // Load lại bảng chính
-
-        // Chuyển trang sau 1.2 giây để người dùng kịp đọc thông báo thành công
-        setTimeout(() => {
-            setShowBill(false);
-            navigate('/invoices');
-        }, 1200);
-
-    } catch (err) {
-        triggerStackedToast('error', 'Lỗi Thanh Toán', err.response?.data || "Không thể lưu hóa đơn vào DB.");
-    }
-};
     const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 
     // --- LOGIC TÌM KIẾM, SẮP XẾP & PHÂN TRANG ---
@@ -358,24 +321,7 @@ const handleCompletePayment = async () => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '15px', marginTop: '25px' }}>
-                           <div style={{ display: 'flex', gap: '15px', marginTop: '25px' }}>
-    <button 
-        onClick={handleCompletePayment} 
-        style={{
-            ...btnActionStyle, 
-            // Đổi màu: Nếu đã thanh toán thì hiện màu xanh dương (Action), chưa thì màu xanh lá
-            backgroundColor: invoiceData.isPaid ? '#3498db' : '#2ecc71', 
-            cursor: 'pointer', 
-            color: 'white'
-        }} 
-    >
-        {invoiceData.isPaid ? " Xem Hóa Đơn" : "Hoàn thành thanh toán"}
-    </button>
-    
-    <button onClick={() => window.print()} style={{...btnActionStyle, backgroundColor: '#34495e', color: 'white'}} >
-        In Bill
-    </button>
-</div>
+                            <button onClick={handleCompletePayment} disabled={invoiceData.isPaid} style={{...btnActionStyle, backgroundColor: invoiceData.isPaid ? '#bdc3c7' : '#2ecc71', cursor: invoiceData.isPaid ? 'not-allowed' : 'pointer', color: invoiceData.isPaid ? '#7f8c8d' : 'white'}} >{invoiceData.isPaid ? " Đã Hoàn Thành" : "Hoàn thành thanh toán"}</button>
                             <button onClick={() => window.print()} style={{...btnActionStyle, backgroundColor: '#34495e', color: 'white'}} > In Bill</button>
                         </div>
                     </div>
