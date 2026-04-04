@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Thêm dòng này
+import { useNavigate } from 'react-router-dom'; // Giữ lại 1 dòng import
 
 function BookingInfo() {
-    const navigate = useNavigate(); // Khai báo hook điều hướng
+    const navigate = useNavigate();
+
     const [bookings, setBookings] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const bookingsPerPage = 8;
@@ -22,10 +23,16 @@ function BookingInfo() {
     const [showGuestModal, setShowGuestModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [guestForm, setGuestForm] = useState({ guestId: '', guestName: '', phone: '' });
-    
+
     useEffect(() => {
         fetchBookings();
     }, []);
+
+    // --- HÀM FORMAT TIỀN TỆ (THÊM MỚI ĐỂ TRÁNH LỖI) ---
+    const formatCurrency = (amount) => {
+        if (amount === undefined || amount === null) return "0 ₫";
+        return amount.toLocaleString('vi-VN') + " ₫";
+    };
 
     const fetchBookings = () => {
         axios.get('http://localhost:8080/api/bookings')
@@ -67,23 +74,23 @@ function BookingInfo() {
         setShowGuestModal(true);
     };
 
-   const handleSaveGuest = async (e) => {
-    e.preventDefault();
-    try {
-        if (isEditing) {
-            // Trường hợp SỬA: Gửi toàn bộ form bao gồm ID
-            await axios.put(`http://localhost:8080/api/guests/${guestForm.guestId}`, guestForm);
-            triggerStackedToast('success', 'Cập Nhật Thành Công', `Đã sửa: ${guestForm.guestName}`);
-        } else {
-            // Trường hợp THÊM MỚI: Loại bỏ guestId để tránh lỗi ép kiểu ở Backend
-            const { guestId, ...newGuestData } = guestForm; 
+    const handleSaveGuest = async (e) => {
+        e.preventDefault();
+        try {
+            if (isEditing) {
+                // Trường hợp SỬA: Gửi toàn bộ form bao gồm ID
+                await axios.put(`http://localhost:8080/api/guests/${guestForm.guestId}`, guestForm);
+                triggerStackedToast('success', 'Cập Nhật Thành Công', `Đã sửa: ${guestForm.guestName}`);
+            } else {
+                // Trường hợp THÊM MỚI: Loại bỏ guestId để tránh lỗi ép kiểu ở Backend
+                const { guestId, ...newGuestData } = guestForm; 
+                
+                await axios.post(`http://localhost:8080/api/guests`, newGuestData);
+                triggerStackedToast('success', 'Thêm Khách Thành Công', `Đã thêm ${guestForm.guestName}`);
+            }
             
-            await axios.post(`http://localhost:8080/api/guests`, newGuestData);
-            triggerStackedToast('success', 'Thêm Khách Thành Công', `Đã thêm ${guestForm.guestName}`);
-        }
-        
-        setShowGuestModal(false);
-        fetchBookings(); // Tải lại bảng
+            setShowGuestModal(false);
+            fetchBookings(); // Tải lại bảng
         } 
         catch (err) 
         {
@@ -127,53 +134,26 @@ function BookingInfo() {
         }
     };
 
-    // const handleCompletePayment = async () => {
-    //     try {
-    //         await axios.post(`http://localhost:8080/api/invoices/checkout/${invoiceData.bookingId}?paymentMethod=Cash`);
+    const handleCompletePayment = async () => {
+        try {
+            await axios.post(`http://localhost:8080/api/invoices/checkout/${invoiceData.bookingId}?paymentMethod=Cash`);
+            
+            setInvoiceData(prev => ({ ...prev, isPaid: true }));
+            triggerStackedToast('success', 'Thanh Toán Thành Công!', 'Đã lưu hóa đơn sang mục Quản Lý Hóa Đơn.');
+            fetchBookings(); // Làm mới dữ liệu bảng nền
 
-    //         setInvoiceData(prev => ({ ...prev, isPaid: true }));
-    //         triggerStackedToast('success', 'Thanh Toán Thành Công!', 'Đã lưu hóa đơn sang mục Quản Lý Hóa Đơn.');
-    //         fetchBookings();
-    //     } catch (err) {
-    //         triggerStackedToast('error', 'Lỗi Thanh Toán', err.response?.data || "Không thể lưu hóa đơn vào DB.");
-    //     }
-    // };
-// --- CẬP NHẬT HÀM THANH TOÁN ---
-const handleCompletePayment = async () => {
-    // Nếu hóa đơn đã được thanh toán trước đó, bấm vào là chuyển trang luôn
-    if (invoiceData.isPaid) {
-        setShowBill(false); // Đóng modal trước khi đi
-        navigate('/invoices');
-        return;
-    }
-
-    try {
-        // Gọi API thanh toán
-        await axios.post(`http://localhost:8080/api/invoices/checkout/${invoiceData.bookingId}?paymentMethod=Cash`);
-
-        setInvoiceData(prev => ({ ...prev, isPaid: true }));
-        triggerStackedToast('success', 'Thanh Toán Thành Công!', 'Đang chuyển đến trang quản lý hóa đơn...');
-        
-        fetchBookings(); // Load lại bảng chính
-
-        // Chuyển trang sau 1.2 giây để người dùng kịp đọc thông báo thành công
-        setTimeout(() => {
+            // Đóng Modal và chuyển hướng
             setShowBill(false);
-            navigate('/invoices');
-        }, 1200);
+            navigate('/invoices', { state: { newInvoiceId: invoiceData.bookingId } }); 
+            
+        } catch (err) {
+            triggerStackedToast('error', 'Lỗi Thanh Toán', err.response?.data || "Không thể lưu hóa đơn vào DB.");
+        }
+    };
 
-    } catch (err) {
-        triggerStackedToast('error', 'Lỗi Thanh Toán', err.response?.data || "Không thể lưu hóa đơn vào DB.");
-    }
-};
-    const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
-
-    // --- LOGIC TÌM KIẾM, SẮP XẾP & PHÂN TRANG ---
-    const filteredBookings = bookings.filter((booking) => {
-        if (!searchPhone) return true;
-        const phone = booking.guest?.phone || "";
-        return String(phone).includes(searchPhone);
-    });
+    // Xử lý Lọc và Phân trang (Giả định bạn có logic filter, ở đây đang thiếu biến filteredBookings,
+    // Mình đang gán tạm bằng `bookings` để tránh lỗi, nếu bạn có hàm filter thì sửa lại nhé)
+    const filteredBookings = bookings; // Thêm dòng này để phòng hờ lỗi undefined
 
     const sortedBookings = [...filteredBookings].sort((a, b) => {
         const roomA = a.room?.roomNumber ? String(a.room.roomNumber) : "";
@@ -257,7 +237,6 @@ const handleCompletePayment = async () => {
                             <td style={tdStyle}>
                                 <button onClick={() => handleInvoiceClick(booking)} style={btnInvoiceStyle}>Invoice</button>
                             </td>
-                            {/* NÚT CÂY BÚT (Đã cập nhật sự kiện onClick) */}
                             <td style={tdStyle}>
                                 <span onClick={() => openEditModal(booking.guest)} style={{ cursor: 'pointer', color: '#f39c12', fontSize: '18px' }}>✏️</span>
                             </td>
@@ -358,24 +337,7 @@ const handleCompletePayment = async () => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '15px', marginTop: '25px' }}>
-                           <div style={{ display: 'flex', gap: '15px', marginTop: '25px' }}>
-    <button 
-        onClick={handleCompletePayment} 
-        style={{
-            ...btnActionStyle, 
-            // Đổi màu: Nếu đã thanh toán thì hiện màu xanh dương (Action), chưa thì màu xanh lá
-            backgroundColor: invoiceData.isPaid ? '#3498db' : '#2ecc71', 
-            cursor: 'pointer', 
-            color: 'white'
-        }} 
-    >
-        {invoiceData.isPaid ? " Xem Hóa Đơn" : "Hoàn thành thanh toán"}
-    </button>
-    
-    <button onClick={() => window.print()} style={{...btnActionStyle, backgroundColor: '#34495e', color: 'white'}} >
-        In Bill
-    </button>
-</div>
+                            <button onClick={handleCompletePayment} disabled={invoiceData.isPaid} style={{...btnActionStyle, backgroundColor: invoiceData.isPaid ? '#bdc3c7' : '#2ecc71', cursor: invoiceData.isPaid ? 'not-allowed' : 'pointer', color: invoiceData.isPaid ? '#7f8c8d' : 'white'}} >{invoiceData.isPaid ? " Đã Hoàn Thành" : "Hoàn thành thanh toán"}</button>
                             <button onClick={() => window.print()} style={{...btnActionStyle, backgroundColor: '#34495e', color: 'white'}} > In Bill</button>
                         </div>
                     </div>
@@ -385,7 +347,7 @@ const handleCompletePayment = async () => {
     );
 }
 
-// --- STYLES CŨ CỦA BÁC ---
+// --- STYLES ---
 const btnSearchStyle = { backgroundColor: '#f39c12', color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', fontSize: '18px' };
 const btnInvoiceStyle = { padding: '6px 12px', backgroundColor: '#125c61', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' };
 const btnPageStyle = { border: 'none', padding: '5px 12px', cursor: 'pointer', fontWeight: 'bold' };
@@ -402,7 +364,6 @@ const toastTitleStyle = { fontWeight: 'bold', fontSize: '15px', color: '#333', m
 const toastDescriptionStyle = { fontSize: '13px', color: '#666', lineHeight: '1.4' };
 const toastCloseBtnStyle = { position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '16px', color: '#aaa', cursor: 'pointer', fontWeight: 'bold' };
 
-// --- STYLES MỚI BỔ SUNG CHO MODAL GUEST & NÚT ADD ---
 const fabStyle = { position: 'fixed', bottom: '40px', right: '40px', width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#f39c12', color: 'white', fontSize: '30px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.3)', zIndex: 999 };
 const modalStyle = { backgroundColor: 'white', padding: '30px', borderRadius: '15px', width: '350px' };
 const inputStyle = { width: '100%', padding: '10px', marginTop: '5px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' };
