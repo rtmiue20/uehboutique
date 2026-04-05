@@ -10,6 +10,9 @@ function RoomStatus() {
     const [searchRoomNumber, setSearchRoomNumber] = useState("");
     const [showSearchBox, setShowSearchBox] = useState(false);
 
+    // Thêm state để quản lý nội dung và trạng thái hiển thị của Toast Message
+    const [toastMessage, setToastMessage] = useState("");
+
     useEffect(() => {
         const fetchAllData = async () => {
             try {
@@ -56,7 +59,7 @@ function RoomStatus() {
                     const resStaff = await axios.get('http://localhost:8080/api/staff?role=Housekeeper');
                     setHousekeepers(resStaff.data);
                 } catch (error) {
-                    // TRẢ LẠI SỰ TRONG SẠCH CHO CÔ XUÂN PHẠM 😂 Lấy tên giả chuẩn làm lao công:
+                    // Lấy tên giả chuẩn làm lao công nếu lỗi
                     setHousekeepers([
                         { staff_id: 1, staff_name: 'Nguyễn Văn A (Lao công)', role: 'Housekeeper' },
                         { staff_id: 2, staff_name: 'Trần Thị B (Lao công)', role: 'Housekeeper' }
@@ -83,8 +86,14 @@ function RoomStatus() {
     };
 
     const confirmCleaning = () => {
-        alert(`Đã điều phối nhân viên dọn dẹp cho phòng ${selectedRoom.roomNumber}!`);
+        // Thay vì dùng alert() chặn màn hình, ta set nội dung cho Toast Message
+        setToastMessage(`Đã điều phối nhân viên dọn dẹp cho phòng ${selectedRoom.roomNumber}!`);
         setShowCleanModal(false);
+
+        // Đặt thời gian tự động ẩn Toast sau 3 giây (3000ms)
+        setTimeout(() => {
+            setToastMessage("");
+        }, 3000);
     };
 
     const filteredRooms = rooms.filter(room =>
@@ -106,7 +115,7 @@ function RoomStatus() {
     };
 
     return (
-        <div style={{ padding: '30px', fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", backgroundColor: '#f5f7f9', minHeight: '80vh' }}>
+        <div style={{ padding: '30px', fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", backgroundColor: '#f5f7f9', minHeight: '80vh', position: 'relative' }}>
 
             <div style={titleContainerStyle}>
                 <h1 style={h1Style}>🏨 HOTEL UEH BOUTIQUE</h1>
@@ -130,7 +139,7 @@ function RoomStatus() {
                 <button
                     onClick={() => {
                         setShowSearchBox(!showSearchBox);
-                        if(showSearchBox) setSearchRoomNumber("");
+                        if (showSearchBox) setSearchRoomNumber("");
                     }}
                     style={{
                         backgroundColor: '#f39c12', color: 'white', border: 'none',
@@ -171,8 +180,8 @@ function RoomStatus() {
                             </p>
 
                             <span style={{ fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', backgroundColor: 'rgba(0,0,0,0.2)', padding: '2px 8px', borderRadius: '4px' }}>
-                {room.status}
-              </span>
+                                {room.status}
+                            </span>
 
                             {room.status === 'Dirty' && (
                                 <button
@@ -233,10 +242,18 @@ function RoomStatus() {
                             ))}
                         </select>
                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
-                            <button onClick={() => setShowCleanModal(false)} style={{...closeBtnStyle, backgroundColor: '#95a5a6', marginTop: 0}}>Hủy</button>
-                            <button onClick={confirmCleaning} style={{...closeBtnStyle, backgroundColor: '#f39c12', marginTop: 0}}>Xác nhận</button>
+                            <button onClick={() => setShowCleanModal(false)} style={{ ...closeBtnStyle, backgroundColor: '#95a5a6', marginTop: 0 }}>Hủy</button>
+                            <button onClick={confirmCleaning} style={{ ...closeBtnStyle, backgroundColor: '#f39c12', marginTop: 0 }}>Xác nhận</button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* CUSTOM TOAST MESSAGE (HIỂN THỊ GÓC TRÊN BÊN PHẢI) */}
+            {toastMessage && (
+                <div style={toastNotificationStyle}>
+                    <span style={{ fontSize: '20px' }}>✅</span>
+                    <span>{toastMessage}</span>
                 </div>
             )}
 
@@ -244,8 +261,30 @@ function RoomStatus() {
     );
 }
 
+// --- CÁC BIẾN STYLE DÙNG CHUNG ---
 const modalOverlayStyle = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 };
 const modalContentStyle = { backgroundColor: 'white', padding: '30px', borderRadius: '15px', width: '380px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' };
 const closeBtnStyle = { marginTop: '25px', padding: '12px 20px', backgroundColor: '#125c61', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', width: '100%', fontWeight: 'bold', fontSize: '14px' };
+
+// Style riêng cho Toast Notification
+const toastNotificationStyle = {
+    position: 'fixed',
+    top: '30px',
+    right: '30px',
+    backgroundColor: '#fff',
+    borderLeft: '5px solid #2ecc71',
+    color: '#333',
+    padding: '16px 24px',
+    borderRadius: '8px',
+    boxShadow: '0 6px 20px rgba(0,0,0,0.15)',
+    zIndex: 9999, // Đảm bảo luôn nằm trên cùng
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    fontSize: '15px',
+    fontWeight: '500',
+    transition: 'all 0.3s ease-in-out',
+    animation: 'slideInRight 0.4s ease-out forwards'
+};
 
 export default RoomStatus;
