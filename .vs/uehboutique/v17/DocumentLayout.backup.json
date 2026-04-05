@@ -40,7 +40,11 @@
               "RelativeDocumentMoniker": "uehboutique\\frontend\\src\\Layout.jsx",
               "ToolTip": "C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Layout.jsx",
               "RelativeToolTip": "uehboutique\\frontend\\src\\Layout.jsx",
+<<<<<<< HEAD
               "ViewState": "AgIAAF0AAAAAAAAAAAAAAHUAAAAWAAAAAAAAAA==",
+=======
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAHUAAAAWAAAAAAAAAA==",
+>>>>>>> 713392339abaafcbf06d645460f242e87f039ac6
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
               "WhenOpened": "2026-04-03T17:31:32.729Z",
               "EditorCaption": ""
@@ -55,7 +59,12 @@
               "RelativeToolTip": "uehboutique\\frontend\\src\\Login.jsx",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+<<<<<<< HEAD
               "WhenOpened": "2026-04-03T17:31:31.403Z"
+=======
+              "WhenOpened": "2026-04-03T17:31:31.403Z",
+              "EditorCaption": ""
+>>>>>>> 713392339abaafcbf06d645460f242e87f039ac6
             },
             {
               "$type": "Document",
@@ -67,7 +76,12 @@
               "RelativeToolTip": "uehboutique\\frontend\\src\\App.jsx",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+<<<<<<< HEAD
               "WhenOpened": "2026-04-03T17:22:29.183Z"
+=======
+              "WhenOpened": "2026-04-03T17:22:29.183Z",
+              "EditorCaption": ""
+>>>>>>> 713392339abaafcbf06d645460f242e87f039ac6
             },
             {
               "$type": "Document",
@@ -79,7 +93,12 @@
               "RelativeToolTip": "uehboutique\\frontend\\src\\BookingInfo.jsx",
               "ViewState": "AgIAAD8BAAAAAAAAAAAiwEQBAABqAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+<<<<<<< HEAD
               "WhenOpened": "2026-04-03T17:22:25.87Z"
+=======
+              "WhenOpened": "2026-04-03T17:22:25.87Z",
+              "EditorCaption": ""
+>>>>>>> 713392339abaafcbf06d645460f242e87f039ac6
             },
             {
               "$type": "Document",
@@ -89,7 +108,11 @@
               "RelativeDocumentMoniker": "uehboutique\\frontend\\src\\Dashboard.jsx",
               "ToolTip": "C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Dashboard.jsx",
               "RelativeToolTip": "uehboutique\\frontend\\src\\Dashboard.jsx",
+<<<<<<< HEAD
               "ViewState": "AgIAAIsAAAAAAAAAAAAAAK8AAAAZAAAAAAAAAA==",
+=======
+              "ViewState": "AgIAAKYAAAAAAAAAAAAAAK8AAAAZAAAAAAAAAA==",
+>>>>>>> 713392339abaafcbf06d645460f242e87f039ac6
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
               "WhenOpened": "2026-04-02T18:11:47.142Z",
               "EditorCaption": ""

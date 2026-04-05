@@ -1,7 +1,16 @@
 {
   "ExpandedNodes": [
+<<<<<<< HEAD
     ""
   ],
   "SelectedNode": "\\C:\\Users\\PC\\Source\\Repos\\uehboutique",
+=======
+    "",
+    "\\uehboutique",
+    "\\uehboutique\\frontend",
+    "\\uehboutique\\frontend\\src"
+  ],
+  "SelectedNode": "\\uehboutique\\frontend\\src\\Layout.jsx",
+>>>>>>> 713392339abaafcbf06d645460f242e87f039ac6
   "PreviewInSolutionExplorer": false
 }

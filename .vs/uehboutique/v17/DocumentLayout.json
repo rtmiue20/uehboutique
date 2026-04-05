@@ -1,5 +1,6 @@
 {
   "Version": 1,
+<<<<<<< HEAD
   "WorkspaceRootPath": "C:\\Users\\PC\\source\\repos\\uehboutique\\",
   "Documents": [
     {
@@ -20,6 +21,28 @@
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\PC\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\BookingInfo.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+=======
+  "WorkspaceRootPath": "C:\\Users\\tytri\\source\\repos\\uehboutique\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Layout.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:uehboutique\\frontend\\src\\Layout.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Dashboard.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:uehboutique\\frontend\\src\\Dashboard.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Login.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:uehboutique\\frontend\\src\\Login.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\App.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:uehboutique\\frontend\\src\\App.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\BookingInfo.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+>>>>>>> 713392339abaafcbf06d645460f242e87f039ac6
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:uehboutique\\frontend\\src\\BookingInfo.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     }
   ],
@@ -30,6 +53,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
+<<<<<<< HEAD
           "SelectedChildIndex": 1,
           "Children": [
             {
@@ -45,6 +69,19 @@
               "ToolTip": "C:\\Users\\PC\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Layout.jsx",
               "RelativeToolTip": "uehboutique\\frontend\\src\\Layout.jsx",
               "ViewState": "AgIAABcAAAAAAAAAAAAAwGkAAAABAAAAAAAAAA==",
+=======
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Layout.jsx",
+              "DocumentMoniker": "C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Layout.jsx",
+              "RelativeDocumentMoniker": "uehboutique\\frontend\\src\\Layout.jsx",
+              "ToolTip": "C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Layout.jsx",
+              "RelativeToolTip": "uehboutique\\frontend\\src\\Layout.jsx",
+              "ViewState": "AgIAAF0AAAAAAAAAAAAAAHUAAAAWAAAAAAAAAA==",
+>>>>>>> 713392339abaafcbf06d645460f242e87f039ac6
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
               "WhenOpened": "2026-04-03T17:31:32.729Z",
               "EditorCaption": ""
@@ -53,9 +90,15 @@
               "$type": "Document",
               "DocumentIndex": 2,
               "Title": "Login.jsx",
+<<<<<<< HEAD
               "DocumentMoniker": "C:\\Users\\PC\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Login.jsx",
               "RelativeDocumentMoniker": "uehboutique\\frontend\\src\\Login.jsx",
               "ToolTip": "C:\\Users\\PC\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Login.jsx",
+=======
+              "DocumentMoniker": "C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Login.jsx",
+              "RelativeDocumentMoniker": "uehboutique\\frontend\\src\\Login.jsx",
+              "ToolTip": "C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Login.jsx",
+>>>>>>> 713392339abaafcbf06d645460f242e87f039ac6
               "RelativeToolTip": "uehboutique\\frontend\\src\\Login.jsx",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
@@ -65,9 +108,15 @@
               "$type": "Document",
               "DocumentIndex": 3,
               "Title": "App.jsx",
+<<<<<<< HEAD
               "DocumentMoniker": "C:\\Users\\PC\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\App.jsx",
               "RelativeDocumentMoniker": "uehboutique\\frontend\\src\\App.jsx",
               "ToolTip": "C:\\Users\\PC\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\App.jsx",
+=======
+              "DocumentMoniker": "C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\App.jsx",
+              "RelativeDocumentMoniker": "uehboutique\\frontend\\src\\App.jsx",
+              "ToolTip": "C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\App.jsx",
+>>>>>>> 713392339abaafcbf06d645460f242e87f039ac6
               "RelativeToolTip": "uehboutique\\frontend\\src\\App.jsx",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
@@ -77,9 +126,15 @@
               "$type": "Document",
               "DocumentIndex": 4,
               "Title": "BookingInfo.jsx",
+<<<<<<< HEAD
               "DocumentMoniker": "C:\\Users\\PC\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\BookingInfo.jsx",
               "RelativeDocumentMoniker": "uehboutique\\frontend\\src\\BookingInfo.jsx",
               "ToolTip": "C:\\Users\\PC\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\BookingInfo.jsx",
+=======
+              "DocumentMoniker": "C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\BookingInfo.jsx",
+              "RelativeDocumentMoniker": "uehboutique\\frontend\\src\\BookingInfo.jsx",
+              "ToolTip": "C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\BookingInfo.jsx",
+>>>>>>> 713392339abaafcbf06d645460f242e87f039ac6
               "RelativeToolTip": "uehboutique\\frontend\\src\\BookingInfo.jsx",
               "ViewState": "AgIAAD8BAAAAAAAAAAAiwEQBAABqAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
@@ -89,6 +144,7 @@
               "$type": "Document",
               "DocumentIndex": 1,
               "Title": "Dashboard.jsx",
+<<<<<<< HEAD
               "DocumentMoniker": "C:\\Users\\PC\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Dashboard.jsx",
               "RelativeDocumentMoniker": "uehboutique\\frontend\\src\\Dashboard.jsx",
               "ToolTip": "C:\\Users\\PC\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Dashboard.jsx",
@@ -96,6 +152,16 @@
               "ViewState": "AgIAAIsAAAAAAAAAAAAAAK8AAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
               "WhenOpened": "2026-04-02T18:11:47.142Z"
+=======
+              "DocumentMoniker": "C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Dashboard.jsx",
+              "RelativeDocumentMoniker": "uehboutique\\frontend\\src\\Dashboard.jsx",
+              "ToolTip": "C:\\Users\\tytri\\source\\repos\\uehboutique\\uehboutique\\frontend\\src\\Dashboard.jsx",
+              "RelativeToolTip": "uehboutique\\frontend\\src\\Dashboard.jsx",
+              "ViewState": "AgIAAIsAAAAAAAAAAAAAAK8AAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2026-04-02T18:11:47.142Z",
+              "EditorCaption": ""
+>>>>>>> 713392339abaafcbf06d645460f242e87f039ac6
             }
           ]
         }
