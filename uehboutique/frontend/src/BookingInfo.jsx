@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 
 function BookingInfo() {
     const navigate = useNavigate();
-
     const [bookings, setBookings] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const bookingsPerPage = 8;
@@ -12,26 +11,26 @@ function BookingInfo() {
     const [searchPhone, setSearchPhone] = useState("");
     const [showSearchBox, setShowSearchBox] = useState(false);
 
-    // STATE CHO HỆ THỐNG TOAST MỚI (CHỨA MẢNG CÁC THÔNG BÁO)
-    const [toasts, setToasts] = useState([]); // [{ id, type, title, description }]
+    // STATE CHO HỆ THỐNG TOAST 
+    const [toasts, setToasts] = useState([]);
 
     // State cho Bill Modal
     const [showBill, setShowBill] = useState(false);
     const [invoiceData, setInvoiceData] = useState(null);
 
-    // --- STATE MỚI ĐỂ CHỌN PHƯƠNG THỨC THANH TOÁN ---
+    // --- STATE CHO PHƯƠNG THỨC THANH TOÁN ---
     const [paymentMethod, setPaymentMethod] = useState('Cash');
 
-    // --- STATE MỚI CHO TÍNH NĂNG KHÁCH HÀNG (THÊM/SỬA) ---
+    // --- STATE CHO TÍNH NĂNG KHÁCH HÀNG (THÊM/SỬA) ---
     const [showGuestModal, setShowGuestModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [guestForm, setGuestForm] = useState({ guestId: '', guestName: '', phone: '' });
+    const [guestForm, setGuestForm] = useState({ guestId: '', guestName: '', phone: '', checkInDate: '', checkOutDate: '', roomType: 'Single Standard' });
 
     useEffect(() => {
         fetchBookings();
     }, []);
 
-    // --- HÀM FORMAT TIỀN TỆ (THÊM MỚI ĐỂ TRÁNH LỖI) ---
+    // --- HÀM FORMAT TIỀN TỆ ---
     const formatCurrency = (amount) => {
         if (amount === undefined || amount === null) return "0 ₫";
         return amount.toLocaleString('vi-VN') + " ₫";
@@ -40,7 +39,6 @@ function BookingInfo() {
     const fetchBookings = () => {
         axios.get('http://localhost:8080/api/bookings')
             .then(response => {
-                // Đảm bảo dữ liệu luôn là mảng, tránh lỗi sập web
                 setBookings(Array.isArray(response.data) ? response.data : []);
             })
             .catch(error => {
@@ -49,31 +47,33 @@ function BookingInfo() {
             });
     };
 
-    // --- HÀM 1: QUẢN LÝ THÊM THÔNG BÁO (Triggerstacked Toast) ---
     const triggerStackedToast = (type, title, description) => {
-        const id = Date.now(); // Tạo id duy nhất bằng timestamp
+        const id = Date.now();
         const newToast = { id, type, title, description };
         setToasts(prev => [newToast, ...prev]);
-
-        // Tự động xóa thông báo sau 5 giây
         setTimeout(() => removeToast(id), 5000);
     };
 
-    // --- HÀM 2: QUẢN LÝ XÓA THÔNG BÁO ---
     const removeToast = (id) => {
         setToasts(prev => prev.filter(t => t.id !== id));
     };
 
-    // --- CÁC HÀM XỬ LÝ KHÁCH HÀNG (THÊM/SỬA) ---
     const openAddModal = () => {
         setIsEditing(false);
-        setGuestForm({ guestId: '', guestName: '', phone: '' });
+        setGuestForm({ guestId: '', guestName: '', phone: '', checkInDate: '', checkOutDate: '', roomType: 'Single Standard' });
         setShowGuestModal(true);
     };
 
     const openEditModal = (guest) => {
         setIsEditing(true);
-        setGuestForm({ guestId: guest.guestId, guestName: guest.guestName, phone: guest.phone });
+        setGuestForm({
+            guestId: guest.guestId,
+            guestName: guest.guestName,
+            phone: guest.phone,
+            checkInDate: guest.checkInDate || '',
+            checkOutDate: guest.checkOutDate || '',
+            roomType: guest.roomType || 'Single Standard'
+        });
         setShowGuestModal(true);
     };
 
@@ -81,28 +81,34 @@ function BookingInfo() {
         e.preventDefault();
         try {
             if (isEditing) {
-                // Trường hợp SỬA: Gửi toàn bộ form bao gồm ID
                 await axios.put(`http://localhost:8080/api/guests/${guestForm.guestId}`, guestForm);
                 triggerStackedToast('success', 'Cập Nhật Thành Công', `Đã sửa: ${guestForm.guestName}`);
             } else {
-                // Trường hợp THÊM MỚI: Loại bỏ guestId để tránh lỗi ép kiểu ở Backend
                 const { guestId, ...newGuestData } = guestForm;
-
                 await axios.post(`http://localhost:8080/api/guests`, newGuestData);
                 triggerStackedToast('success', 'Thêm Khách Thành Công', `Đã thêm ${guestForm.guestName}`);
             }
 
             setShowGuestModal(false);
-            fetchBookings(); // Tải lại bảng
+            fetchBookings();
         }
-        catch (err)
-        {
+        catch (err) {
             console.error("Chi tiết lỗi:", err.response?.data);
             triggerStackedToast('error', 'Lỗi Hệ Thống', err.response?.data?.message || 'Dữ liệu không hợp lệ.');
         }
     };
 
-    // --- CÁC HÀM XỬ LÝ THANH TOÁN & INVOICE ---
+    const handleTogglePayment = (id) => {
+        const updatedBookings = bookings.map(booking => {
+            if (booking.bookingId === id) {
+                const isPaid = booking.status === 'Check-out' || booking.status === 'Checked-out';
+                return { ...booking, status: isPaid ? 'Checked-in' : 'Check-out' };
+            }
+            return booking;
+        });
+        setBookings(updatedBookings);
+    };
+
     const handleInvoiceClick = async (booking) => {
         try {
             const res = await axios.get(`http://localhost:8080/api/invoices/preview/${booking.bookingId}`);
@@ -120,8 +126,7 @@ function BookingInfo() {
                 isPaid: booking.status === 'Check-out' || booking.status === 'Checked-out'
             });
 
-            // Reset phương thức thanh toán về Cash mỗi khi mở hóa đơn mới
-            setPaymentMethod('Cash');
+            setPaymentMethod('Cash'); // Reset phương thức thanh toán về Cash
             setShowBill(true);
         } catch (err) {
             triggerStackedToast('error', 'Lỗi tải hóa đơn', err.response?.data || "Server không phản hồi.");
@@ -129,28 +134,36 @@ function BookingInfo() {
     };
 
     const handleCompletePayment = async () => {
+        if (invoiceData.isPaid) {
+            setShowBill(false);
+            navigate('/invoices');
+            return;
+        }
+
         try {
             // Nối paymentMethod đã chọn vào đuôi API
             await axios.post(`http://localhost:8080/api/invoices/checkout/${invoiceData.bookingId}?paymentMethod=${paymentMethod}`);
 
             setInvoiceData(prev => ({ ...prev, isPaid: true }));
+            triggerStackedToast('success', 'Thanh Toán Thành Công!', 'Đang chuyển đến trang quản lý hóa đơn...');
 
-            // Hiển thị toast thông báo
-            triggerStackedToast('success', 'Thanh Toán Thành Công!', 'Đã lưu hóa đơn sang mục Quản Lý Hóa Đơn.');
-            fetchBookings(); // Làm mới dữ liệu bảng nền
-            setShowBill(false); // Đóng Modal
+            fetchBookings();
 
-            // Delay 1.5 giây để người dùng kịp nhìn thấy Toast Message rồi mới chuyển trang
             setTimeout(() => {
-                navigate('/invoices', { state: { newInvoiceId: invoiceData.bookingId } });
-            }, 1500);
+                setShowBill(false);
+                navigate('/invoices');
+            }, 1200);
 
         } catch (err) {
             triggerStackedToast('error', 'Lỗi Thanh Toán', err.response?.data || "Không thể lưu hóa đơn vào DB.");
         }
     };
 
-    const filteredBookings = bookings;
+    const filteredBookings = bookings.filter((booking) => {
+        if (!searchPhone) return true;
+        const phone = booking.guest?.phone || "";
+        return String(phone).includes(searchPhone);
+    });
 
     const sortedBookings = [...filteredBookings].sort((a, b) => {
         const roomA = a.room?.roomNumber ? String(a.room.roomNumber) : "";
@@ -175,7 +188,7 @@ function BookingInfo() {
                     {toasts.map(t => (
                         <div key={t.id} style={{ ...toastItemStyle, backgroundColor: '#fff', borderLeft: t.type === 'success' ? '8px solid #2ecc71' : '8px solid #e74c3c' }}>
                             <div style={toastIconStyle}>
-                                {t.type === 'success' ? <span style={{color: '#2ecc71', fontSize: '18px'}}>✔</span> : <span style={{color: '#e74c3c', fontSize: '18px'}}>✘</span>}
+                                {t.type === 'success' ? <span style={{ color: '#2ecc71', fontSize: '18px' }}>✔</span> : <span style={{ color: '#e74c3c', fontSize: '18px' }}>✘</span>}
                             </div>
                             <div style={toastContentStyle}>
                                 <div style={toastTitleStyle}>{t.title}</div>
@@ -201,64 +214,63 @@ function BookingInfo() {
             <div style={{ backgroundColor: 'white', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 8px rgba(0,0,0,0.05)' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead style={{ backgroundColor: '#83b5b7', color: '#1a4e52' }}>
-                    <tr>
-                        <th style={thStyle}>MÃ KHÁCH HÀNG</th>
-                        <th style={{...thStyle, textAlign: 'left'}}>TÊN KHÁCH HÀNG</th>
-                        <th style={thStyle}>SỐ ĐIỆN THOẠI</th>
-                        <th style={thStyle}>CHECK IN</th>
-                        <th style={thStyle}>CHECK OUT</th>
-                        <th style={thStyle}>PHÒNG</th>
-                        <th style={thStyle}>THANH TOÁN</th>
-                        <th style={thStyle}>XUẤT BILL</th>
-                        <th style={thStyle}>SỬA</th>
-                    </tr>
+                        <tr>
+                            <th style={thStyle}>MÃ KHÁCH HÀNG</th>
+                            <th style={{ ...thStyle, textAlign: 'left' }}>TÊN KHÁCH HÀNG</th>
+                            <th style={thStyle}>SỐ ĐIỆN THOẠI</th>
+                            <th style={thStyle}>CHECK IN</th>
+                            <th style={thStyle}>CHECK OUT</th>
+                            <th style={thStyle}>PHÒNG</th>
+                            <th style={thStyle}>THANH TOÁN</th>
+                            <th style={thStyle}>XUẤT BILL</th>
+                            <th style={thStyle}>SỬA</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    {currentBookings.length > 0 ? currentBookings.map((booking, index) => {
-                        const isPaid = booking.status === 'Check-out' || booking.status === 'Checked-out';
-                        return (
-                            <tr key={booking.bookingId || index}>
-                                <td style={{...tdStyle, fontWeight: 'bold'}}>{booking.guest?.guestId}</td>
-                                <td style={{...tdStyle, textAlign: 'left'}}>{booking.guest?.guestName}</td>
-                                <td style={tdStyle}>{booking.guest?.phone}</td>
-                                <td style={tdStyle}>{booking.checkInDate}</td>
-                                <td style={tdStyle}>{booking.checkOutDate || '---'}</td>
-                                <td style={{...tdStyle, color: '#f39c12', fontWeight: 'bold'}}>{booking.room?.roomNumber}</td>
+                        {currentBookings.length > 0 ? currentBookings.map((booking, index) => {
+                            const isPaid = booking.status === 'Check-out' || booking.status === 'Checked-out';
+                            return (
+                                <tr key={booking.bookingId || index}>
+                                    <td style={{ ...tdStyle, fontWeight: 'bold' }}>{booking.guest?.guestId}</td>
+                                    <td style={{ ...tdStyle, textAlign: 'left' }}>{booking.guest?.guestName}</td>
+                                    <td style={tdStyle}>{booking.guest?.phone}</td>
+                                    <td style={tdStyle}>{booking.checkInDate}</td>
+                                    <td style={tdStyle}>{booking.checkOutDate || '---'}</td>
+                                    <td style={{ ...tdStyle, color: '#f39c12', fontWeight: 'bold' }}>{booking.room?.roomNumber}</td>
 
-                                {/* --- CẬP NHẬT CỘT THANH TOÁN --- */}
-                                <td style={tdStyle}>
-                                    {isPaid ? (
-                                        <span style={{
-                                            color: '#2ecc71', fontWeight: 'bold',
-                                            padding: '4px 10px', borderRadius: '20px',
-                                            backgroundColor: '#eafaf1', fontSize: '12px',
-                                            display: 'inline-block'
-                                        }}>
-                                            Đã hoàn thành
-                                        </span>
-                                    ) : (
-                                        <span style={{
-                                            color: '#e74c3c', fontWeight: 'bold',
-                                            padding: '4px 10px', borderRadius: '20px',
-                                            backgroundColor: '#fceae8', fontSize: '12px',
-                                            display: 'inline-block'
-                                        }}>
-                                            Chưa thanh toán
-                                        </span>
-                                    )}
-                                </td>
+                                    <td style={tdStyle}>
+                                        {isPaid ? (
+                                            <span style={{
+                                                color: '#2ecc71', fontWeight: 'bold',
+                                                padding: '4px 10px', borderRadius: '20px',
+                                                backgroundColor: '#eafaf1', fontSize: '12px',
+                                                display: 'inline-block'
+                                            }}>
+                                                Đã hoàn thành
+                                            </span>
+                                        ) : (
+                                            <span style={{
+                                                color: '#e74c3c', fontWeight: 'bold',
+                                                padding: '4px 10px', borderRadius: '20px',
+                                                backgroundColor: '#fceae8', fontSize: '12px',
+                                                display: 'inline-block'
+                                            }}>
+                                                Chưa thanh toán
+                                            </span>
+                                        )}
+                                    </td>
 
-                                <td style={tdStyle}>
-                                    <button onClick={() => handleInvoiceClick(booking)} style={btnInvoiceStyle}>Invoice</button>
-                                </td>
-                                <td style={tdStyle}>
-                                    <span onClick={() => openEditModal(booking.guest)} style={{ cursor: 'pointer', color: '#f39c12', fontSize: '18px' }}>✏️</span>
-                                </td>
-                            </tr>
-                        )
-                    }) : (
-                        <tr><td colSpan="10" style={{...tdStyle, color: 'red'}}>Chưa có dữ liệu phòng hoặc không tìm thấy!</td></tr>
-                    )}
+                                    <td style={tdStyle}>
+                                        <button onClick={() => handleInvoiceClick(booking)} style={btnInvoiceStyle}>Invoice</button>
+                                    </td>
+                                    <td style={tdStyle}>
+                                        <span onClick={() => openEditModal(booking.guest)} style={{ cursor: 'pointer', color: '#f39c12', fontSize: '18px' }}>✏️</span>
+                                    </td>
+                                </tr>
+                            )
+                        }) : (
+                            <tr><td colSpan="10" style={{ ...tdStyle, color: 'red' }}>Chưa có dữ liệu phòng hoặc không tìm thấy!</td></tr>
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -266,7 +278,7 @@ function BookingInfo() {
             {totalPages > 1 && (
                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', gap: '10px' }}>
                     {[...Array(totalPages)].map((_, i) => (
-                        <button key={i+1} onClick={() => paginate(i+1)} style={{...btnPageStyle, backgroundColor: currentPage === i+1 ? '#125c61' : 'transparent', color: currentPage === i+1 ? 'white' : '#125c61', border: '1px solid #125c61', borderRadius: '4px'}} >{i+1}</button>
+                        <button key={i + 1} onClick={() => paginate(i + 1)} style={{ ...btnPageStyle, backgroundColor: currentPage === i + 1 ? '#125c61' : 'transparent', color: currentPage === i + 1 ? 'white' : '#125c61', border: '1px solid #125c61', borderRadius: '4px' }} >{i + 1}</button>
                     ))}
                 </div>
             )}
@@ -285,20 +297,51 @@ function BookingInfo() {
                                 <input
                                     type="text" required style={inputStyle}
                                     value={guestForm.guestName}
-                                    onChange={e => setGuestForm({...guestForm, guestName: e.target.value})}
+                                    onChange={e => setGuestForm({ ...guestForm, guestName: e.target.value })}
                                 />
                             </div>
-                            <div style={{ marginBottom: '20px' }}>
+                            <div style={{ marginBottom: '15px' }}>
                                 <label style={labelStyle}>Số điện thoại:</label>
                                 <input
                                     type="text" required style={inputStyle}
                                     value={guestForm.phone}
-                                    onChange={e => setGuestForm({...guestForm, phone: e.target.value})}
+                                    onChange={e => setGuestForm({ ...guestForm, phone: e.target.value })}
                                 />
                             </div>
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={labelStyle}>Ngày nhận phòng (Check-in):</label>
+                                <input
+                                    type="date" required style={inputStyle}
+                                    value={guestForm.checkInDate || ''}
+                                    onChange={e => setGuestForm({ ...guestForm, checkInDate: e.target.value })}
+                                />
+                            </div>
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={labelStyle}>Ngày trả phòng (Check-out):</label>
+                                <input
+                                    type="date" required style={inputStyle}
+                                    value={guestForm.checkOutDate || ''}
+                                    onChange={e => setGuestForm({ ...guestForm, checkOutDate: e.target.value })}
+                                />
+                            </div>
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={labelStyle}>Loại phòng:</label>
+                                <select
+                                    required
+                                    style={inputStyle}
+                                    value={guestForm.roomType}
+                                    onChange={e => setGuestForm({ ...guestForm, roomType: e.target.value })}
+                                >
+                                    <option value="Single Standard">Single Standard</option>
+                                    <option value="Single Deluxe">Single Deluxe</option>
+                                    <option value="Family Standard">Family Standard</option>
+                                    <option value="Family Deluxe">Family Deluxe</option>
+                                </select>
+                            </div>
+
                             <div style={{ display: 'flex', gap: '10px' }}>
-                                <button type="submit" style={{...btnModalStyle, backgroundColor: '#125c61'}}>Lưu Lại</button>
-                                <button type="button" onClick={() => setShowGuestModal(false)} style={{...btnModalStyle, backgroundColor: '#95a5a6'}}>Hủy</button>
+                                <button type="submit" style={{ ...btnModalStyle, backgroundColor: '#125c61' }}>Lưu Lại</button>
+                                <button type="button" onClick={() => setShowGuestModal(false)} style={{ ...btnModalStyle, backgroundColor: '#95a5a6' }}>Hủy</button>
                             </div>
                         </form>
                     </div>
@@ -326,20 +369,20 @@ function BookingInfo() {
 
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
-                            <tr style={{ borderBottom: '2px solid #333' }}>
-                                <th style={{ textAlign: 'left', padding: '10px 0' }}>Diễn giải</th>
-                                <th style={{ textAlign: 'right', padding: '10px 0' }}>Thành tiền</th>
-                            </tr>
+                                <tr style={{ borderBottom: '2px solid #333' }}>
+                                    <th style={{ textAlign: 'left', padding: '10px 0' }}>Diễn giải</th>
+                                    <th style={{ textAlign: 'right', padding: '10px 0' }}>Thành tiền</th>
+                                </tr>
                             </thead>
                             <tbody>
-                            <tr>
-                                <td style={{ padding: '10px 0', borderBottom: '1px dashed #ccc' }}>Tiền phòng ({invoiceData.nights} đêm)</td>
-                                <td style={{ textAlign: 'right', borderBottom: '1px dashed #ccc' }}>{formatCurrency(invoiceData.roomTotal)}</td>
-                            </tr>
-                            <tr>
-                                <td style={{ padding: '10px 0' }}>Tiền dịch vụ</td>
-                                <td style={{ textAlign: 'right' }}>{formatCurrency(invoiceData.serviceTotal)}</td>
-                            </tr>
+                                <tr>
+                                    <td style={{ padding: '10px 0', borderBottom: '1px dashed #ccc' }}>Tiền phòng ({invoiceData.nights} đêm)</td>
+                                    <td style={{ textAlign: 'right', borderBottom: '1px dashed #ccc' }}>{formatCurrency(invoiceData.roomTotal)}</td>
+                                </tr>
+                                <tr>
+                                    <td style={{ padding: '10px 0' }}>Tiền dịch vụ</td>
+                                    <td style={{ textAlign: 'right' }}>{formatCurrency(invoiceData.serviceTotal)}</td>
+                                </tr>
                             </tbody>
                         </table>
 
@@ -362,8 +405,21 @@ function BookingInfo() {
                         </div>
 
                         <div style={{ display: 'flex', gap: '15px', marginTop: '25px' }}>
-                            <button onClick={handleCompletePayment} disabled={invoiceData.isPaid} style={{...btnActionStyle, backgroundColor: invoiceData.isPaid ? '#bdc3c7' : '#2ecc71', cursor: invoiceData.isPaid ? 'not-allowed' : 'pointer', color: invoiceData.isPaid ? '#7f8c8d' : 'white'}} >{invoiceData.isPaid ? " Đã Hoàn Thành" : "Hoàn thành thanh toán"}</button>
-                            <button onClick={() => window.print()} style={{...btnActionStyle, backgroundColor: '#34495e', color: 'white'}} > In Bill</button>
+                            <button
+                                onClick={handleCompletePayment}
+                                style={{
+                                    ...btnActionStyle,
+                                    backgroundColor: invoiceData.isPaid ? '#3498db' : '#2ecc71',
+                                    cursor: 'pointer',
+                                    color: 'white'
+                                }}
+                            >
+                                {invoiceData.isPaid ? " Xem Hóa Đơn" : "Hoàn thành thanh toán"}
+                            </button>
+
+                            <button onClick={() => window.print()} style={{ ...btnActionStyle, backgroundColor: '#34495e', color: 'white' }} >
+                                In Bill
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -380,7 +436,6 @@ const overlayStyle = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
 const billModalStyle = { position: 'relative', backgroundColor: 'white', padding: '40px', borderRadius: '8px', width: '480px', color: '#333', boxShadow: '0 5px 20px rgba(0,0,0,0.3)' };
 const closeBtnStyle = { position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', fontSize: '20px', fontWeight: 'bold', color: '#aaa', cursor: 'pointer' };
 const btnActionStyle = { flex: 1, padding: '12px', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', transition: '0.2s' };
-
 const toastContainerStyle = { position: 'fixed', top: '30px', right: '30px', display: 'flex', flexDirection: 'column', gap: '15px', zIndex: 9999, width: '350px' };
 const toastItemStyle = { display: 'flex', alignItems: 'center', padding: '15px 20px', borderRadius: '8px', boxShadow: '0 8px 30px rgba(0,0,0,0.15)', position: 'relative', overflow: 'hidden', minHeight: '80px' };
 const toastIconStyle = { marginRight: '20px', width: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' };
@@ -388,7 +443,6 @@ const toastContentStyle = { flex: 1 };
 const toastTitleStyle = { fontWeight: 'bold', fontSize: '15px', color: '#333', marginBottom: '4px' };
 const toastDescriptionStyle = { fontSize: '13px', color: '#666', lineHeight: '1.4' };
 const toastCloseBtnStyle = { position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '16px', color: '#aaa', cursor: 'pointer', fontWeight: 'bold' };
-
 const fabStyle = { position: 'fixed', bottom: '40px', right: '40px', width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#f39c12', color: 'white', fontSize: '30px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.3)', zIndex: 999 };
 const modalStyle = { backgroundColor: 'white', padding: '30px', borderRadius: '15px', width: '350px' };
 const inputStyle = { width: '100%', padding: '10px', marginTop: '5px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' };
