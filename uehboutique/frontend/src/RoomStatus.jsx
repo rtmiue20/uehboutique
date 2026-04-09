@@ -86,11 +86,23 @@ function RoomStatus() {
     };
 
     const confirmCleaning = () => {
-        // Thay vì dùng alert() chặn màn hình, ta set nội dung cho Toast Message
+        // BƯỚC 1: Cập nhật lại danh sách phòng để đổi trạng thái phòng vừa chọn
+        const updatedRooms = rooms.map(room => {
+            // Nếu tìm thấy đúng ID phòng đang được chọn để dọn
+            if (room.roomId === selectedRoom.roomId) {
+                return { ...room, status: 'Empty' }; // Đổi Dirty thành Empty
+            }
+            return room; // Các phòng khác giữ nguyên
+        });
+
+        // BƯỚC 2: Cập nhật state để giao diện render lại màu xanh
+        setRooms(updatedRooms);
+
+        // BƯỚC 3: Hiển thị Toast thông báo
         setToastMessage(`Đã điều phối nhân viên dọn dẹp cho phòng ${selectedRoom.roomNumber}!`);
         setShowCleanModal(false);
 
-        // Đặt thời gian tự động ẩn Toast sau 3 giây (3000ms)
+        // Tự động ẩn thông báo sau 3 giây
         setTimeout(() => {
             setToastMessage("");
         }, 3000);
