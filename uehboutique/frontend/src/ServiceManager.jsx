@@ -44,14 +44,14 @@ function ServiceManager() {
         try {
             if (isEditing) {
                 await axios.put(`http://localhost:8080/api/services/${serviceForm.serviceId}`, serviceForm);
-                triggerToast(`✅ Đã cập nhật: ${serviceForm.serviceName}`);
+                triggerToast(`Đã cập nhật: ${serviceForm.serviceName}`);
             } else {
                 await axios.post('http://localhost:8080/api/services', serviceForm);
-                triggerToast(`✨ Đã thêm dịch vụ: ${serviceForm.serviceName}`);
+                triggerToast(`Đã thêm dịch vụ: ${serviceForm.serviceName}`);
             }
             setShowServiceModal(false);
             fetchData();
-        } catch (err) { triggerToast("❌ Lỗi thao tác!"); }
+        } catch (err) { triggerToast("Lỗi thao tác!"); }
     };
 
     // --- XỬ LÝ XÓA ---
@@ -59,9 +59,9 @@ function ServiceManager() {
         if (window.confirm(`Xóa ${name}?`)) {
             try {
                 await axios.delete(`http://localhost:8080/api/services/${id}`);
-                triggerToast(`🗑️ Đã xóa món: ${name}`);
+                triggerToast(`Đã xóa món: ${name}`);
                 fetchData();
-            } catch (err) { triggerToast("❌ Không thể xóa!"); }
+            } catch (err) { triggerToast("Không thể xóa!"); }
         }
     };
 
@@ -73,9 +73,9 @@ function ServiceManager() {
             await axios.post('http://localhost:8080/api/service-usages', null, {
                 params: { bookingId: orderForm.bookingId, serviceId: orderForm.serviceId, quantity: orderForm.quantity }
             });
-            triggerToast(`🔔 Phòng ${selectedRoom?.room?.roomNumber} gọi Dịch vụ - ${orderForm.quantity} ${selectedSrv?.serviceName}`);
+            triggerToast(`Phòng ${selectedRoom?.room?.roomNumber} gọi Dịch vụ - ${orderForm.quantity} ${selectedSrv?.serviceName}`);
             setShowOrderModal(false);
-        } catch (err) { triggerToast("❌ Lỗi gọi món!"); }
+        } catch (err) { triggerToast("Lỗi gọi món!"); }
     };
 
     const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
