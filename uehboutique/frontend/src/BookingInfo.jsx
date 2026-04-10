@@ -21,16 +21,26 @@ function BookingInfo() {
     // --- STATE CHO PHƯƠNG THỨC THANH TOÁN ---
     const [paymentMethod, setPaymentMethod] = useState('Cash');
 
+    // --- STATE MỚI: DANH SÁCH TOÀN BỘ PHÒNG ĐỂ LỌC ---
+    const [allRooms, setAllRooms] = useState([]);
+
     // --- STATE CHO TÍNH NĂNG KHÁCH HÀNG (THÊM/SỬA) ---
     const [showGuestModal, setShowGuestModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [guestForm, setGuestForm] = useState({ guestId: '', guestName: '', phone: '', checkInDate: '', checkOutDate: '', roomType: 'Single Standard' });
+    // FIX: Thêm trường idCard vào state mặc định
+    const [guestForm, setGuestForm] = useState({
+        guestId: '', guestName: '', idCard: '', phone: '',
+        checkInDate: '', checkOutDate: '', roomType: 'Single Standard', roomId: ''
+    });
+
+    // Lấy ngày hôm nay để chặn chọn ngày trong quá khứ và làm logic phân luồng
+    const todayStr = new Date().toISOString().split("T")[0];
 
     useEffect(() => {
         fetchBookings();
+        fetchRooms();
     }, []);
 
-    // --- HÀM FORMAT TIỀN TỆ ---
     const formatCurrency = (amount) => {
         if (amount === undefined || amount === null) return "0 ₫";
         return amount.toLocaleString('vi-VN') + " ₫";
@@ -39,12 +49,23 @@ function BookingInfo() {
     const fetchBookings = () => {
         axios.get('http://localhost:8080/api/bookings')
             .then(response => {
-                setBookings(Array.isArray(response.data) ? response.data : []);
+                // FIX: Đề phòng API trả về phân trang (Page<Booking>), lấy response.data.content
+                const data = response.data.content || response.data;
+                setBookings(Array.isArray(data) ? data : []);
             })
             .catch(error => {
-                console.error("Lỗi khi tải dữ liệu:", error);
+                console.error("Lỗi khi tải dữ liệu Booking:", error);
                 setBookings([]);
             });
+    };
+
+    const fetchRooms = () => {
+        axios.get('http://localhost:8080/api/rooms')
+            .then(response => {
+                const data = response.data.content || response.data;
+                setAllRooms(Array.isArray(data) ? data : []);
+            })
+            .catch(error => console.error("Lỗi khi tải danh sách Phòng:", error));
     };
 
     const triggerStackedToast = (type, title, description) => {
@@ -60,53 +81,82 @@ function BookingInfo() {
 
     const openAddModal = () => {
         setIsEditing(false);
-        setGuestForm({ guestId: '', guestName: '', phone: '', checkInDate: '', checkOutDate: '', roomType: 'Single Standard' });
+        // FIX: Reset idCard
+        setGuestForm({ guestId: '', guestName: '', idCard: '', phone: '', checkInDate: '', checkOutDate: '', roomType: 'Single Standard', roomId: '' });
         setShowGuestModal(true);
     };
 
     const openEditModal = (guest) => {
         setIsEditing(true);
+        // FIX: Lấy idCard của khách lên form
         setGuestForm({
             guestId: guest.guestId,
             guestName: guest.guestName,
+            idCard: guest.idCard || '',
             phone: guest.phone,
             checkInDate: guest.checkInDate || '',
             checkOutDate: guest.checkOutDate || '',
-            roomType: guest.roomType || 'Single Standard'
+            roomType: guest.roomType || 'Single Standard',
+            roomId: ''
         });
         setShowGuestModal(true);
     };
 
+    const availableRooms = allRooms.filter(room =>
+        room.roomType?.typeName === guestForm.roomType &&
+        room.status?.trim() === 'Empty'
+    );
+
     const handleSaveGuest = async (e) => {
         e.preventDefault();
         try {
+            // FIX: Tạo payload dành riêng cho Guest Entity, bỏ các trường không liên quan
+            const guestPayload = {
+                guestName: guestForm.guestName,
+                idCard: guestForm.idCard, // Bắt buộc để tránh lỗi 1048
+                phone: guestForm.phone
+            };
+
             if (isEditing) {
-                await axios.put(`http://localhost:8080/api/guests/${guestForm.guestId}`, guestForm);
+                // Gọi API cập nhật khách hàng
+                await axios.put(`http://localhost:8080/api/guests/${guestForm.guestId}`, guestPayload);
                 triggerStackedToast('success', 'Cập Nhật Thành Công', `Đã sửa: ${guestForm.guestName}`);
             } else {
-                const { guestId, ...newGuestData } = guestForm;
-                await axios.post(`http://localhost:8080/api/guests`, newGuestData);
-                triggerStackedToast('success', 'Thêm Khách Thành Công', `Đã thêm ${guestForm.guestName}`);
+                const { roomId, checkInDate, checkOutDate } = guestForm;
+
+                if (!roomId) {
+                    triggerStackedToast('error', 'Lỗi Chọn Phòng', 'Vui lòng chọn phòng trống trước khi đặt!');
+                    return;
+                }
+
+                // 1. Lưu khách hàng vào DB trước
+                const guestRes = await axios.post(`http://localhost:8080/api/guests`, guestPayload);
+                const createdGuestId = guestRes.data?.guestId || guestRes.data;
+
+                // 2. PHÂN LUỒNG LOGIC ĐẶT PHÒNG
+                if (checkInDate === todayStr) {
+                    const checkInPayload = {
+                        guestId: createdGuestId,
+                        roomId: parseInt(roomId),
+                        staffId: 1,
+                        checkOutDate: checkOutDate
+                    };
+                    await axios.post(`http://localhost:8080/api/bookings/checkin`, checkInPayload);
+                    triggerStackedToast('success', 'Nhận Phòng Thành Công', `Đã Check-in trực tiếp phòng ${availableRooms.find(r => r.roomId === parseInt(roomId))?.roomNumber} cho khách ${guestForm.guestName}`);
+                } else {
+                    await axios.post(`http://localhost:8080/api/bookings/reserve?guestId=${createdGuestId}&roomId=${roomId}&staffId=1&checkInDate=${checkInDate}&checkOutDate=${checkOutDate}`);
+                    triggerStackedToast('success', 'Đặt Trước Thành Công', `Đã giữ phòng ${availableRooms.find(r => r.roomId === parseInt(roomId))?.roomNumber} cho khách ${guestForm.guestName}`);
+                }
             }
 
             setShowGuestModal(false);
             fetchBookings();
+            fetchRooms();
         }
         catch (err) {
             console.error("Chi tiết lỗi:", err.response?.data);
-            triggerStackedToast('error', 'Lỗi Hệ Thống', err.response?.data?.message || 'Dữ liệu không hợp lệ.');
+            triggerStackedToast('error', 'Lỗi Hệ Thống', err.response?.data?.message || err.response?.data || 'Dữ liệu không hợp lệ (Có thể trùng CCCD).');
         }
-    };
-
-    const handleTogglePayment = (id) => {
-        const updatedBookings = bookings.map(booking => {
-            if (booking.bookingId === id) {
-                const isPaid = booking.status === 'Check-out' || booking.status === 'Checked-out';
-                return { ...booking, status: isPaid ? 'Checked-in' : 'Check-out' };
-            }
-            return booking;
-        });
-        setBookings(updatedBookings);
     };
 
     const handleInvoiceClick = async (booking) => {
@@ -126,7 +176,7 @@ function BookingInfo() {
                 isPaid: booking.status === 'Check-out' || booking.status === 'Checked-out'
             });
 
-            setPaymentMethod('Cash'); // Reset phương thức thanh toán về Cash
+            setPaymentMethod('Cash');
             setShowBill(true);
         } catch (err) {
             triggerStackedToast('error', 'Lỗi tải hóa đơn', err.response?.data || "Server không phản hồi.");
@@ -141,7 +191,6 @@ function BookingInfo() {
         }
 
         try {
-            // Nối paymentMethod đã chọn vào đuôi API
             await axios.post(`http://localhost:8080/api/invoices/checkout/${invoiceData.bookingId}?paymentMethod=${paymentMethod}`);
 
             setInvoiceData(prev => ({ ...prev, isPaid: true }));
@@ -214,63 +263,63 @@ function BookingInfo() {
             <div style={{ backgroundColor: 'white', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 8px rgba(0,0,0,0.05)' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead style={{ backgroundColor: '#83b5b7', color: '#1a4e52' }}>
-                        <tr>
-                            <th style={thStyle}>MÃ KHÁCH HÀNG</th>
-                            <th style={{ ...thStyle, textAlign: 'left' }}>TÊN KHÁCH HÀNG</th>
-                            <th style={thStyle}>SỐ ĐIỆN THOẠI</th>
-                            <th style={thStyle}>CHECK IN</th>
-                            <th style={thStyle}>CHECK OUT</th>
-                            <th style={thStyle}>PHÒNG</th>
-                            <th style={thStyle}>THANH TOÁN</th>
-                            <th style={thStyle}>XUẤT BILL</th>
-                            <th style={thStyle}>SỬA</th>
-                        </tr>
+                    <tr>
+                        <th style={thStyle}>MÃ KHÁCH HÀNG</th>
+                        <th style={{ ...thStyle, textAlign: 'left' }}>TÊN KHÁCH HÀNG</th>
+                        <th style={thStyle}>SỐ ĐIỆN THOẠI</th>
+                        <th style={thStyle}>CHECK IN</th>
+                        <th style={thStyle}>CHECK OUT</th>
+                        <th style={thStyle}>PHÒNG</th>
+                        <th style={thStyle}>THANH TOÁN</th>
+                        <th style={thStyle}>XUẤT BILL</th>
+                        <th style={thStyle}>SỬA</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        {currentBookings.length > 0 ? currentBookings.map((booking, index) => {
-                            const isPaid = booking.status === 'Check-out' || booking.status === 'Checked-out';
-                            return (
-                                <tr key={booking.bookingId || index}>
-                                    <td style={{ ...tdStyle, fontWeight: 'bold' }}>{booking.guest?.guestId}</td>
-                                    <td style={{ ...tdStyle, textAlign: 'left' }}>{booking.guest?.guestName}</td>
-                                    <td style={tdStyle}>{booking.guest?.phone}</td>
-                                    <td style={tdStyle}>{booking.checkInDate}</td>
-                                    <td style={tdStyle}>{booking.checkOutDate || '---'}</td>
-                                    <td style={{ ...tdStyle, color: '#f39c12', fontWeight: 'bold' }}>{booking.room?.roomNumber}</td>
+                    {currentBookings.length > 0 ? currentBookings.map((booking, index) => {
+                        const isPaid = booking.status === 'Check-out' || booking.status === 'Checked-out';
+                        return (
+                            <tr key={booking.bookingId || index}>
+                                <td style={{ ...tdStyle, fontWeight: 'bold' }}>{booking.guest?.guestId}</td>
+                                <td style={{ ...tdStyle, textAlign: 'left' }}>{booking.guest?.guestName}</td>
+                                <td style={tdStyle}>{booking.guest?.phone}</td>
+                                <td style={tdStyle}>{booking.checkInDate}</td>
+                                <td style={tdStyle}>{booking.checkOutDate || '---'}</td>
+                                <td style={{ ...tdStyle, color: '#f39c12', fontWeight: 'bold' }}>{booking.room?.roomNumber}</td>
 
-                                    <td style={tdStyle}>
-                                        {isPaid ? (
-                                            <span style={{
-                                                color: '#2ecc71', fontWeight: 'bold',
-                                                padding: '4px 10px', borderRadius: '20px',
-                                                backgroundColor: '#eafaf1', fontSize: '12px',
-                                                display: 'inline-block'
-                                            }}>
+                                <td style={tdStyle}>
+                                    {isPaid ? (
+                                        <span style={{
+                                            color: '#2ecc71', fontWeight: 'bold',
+                                            padding: '4px 10px', borderRadius: '20px',
+                                            backgroundColor: '#eafaf1', fontSize: '12px',
+                                            display: 'inline-block'
+                                        }}>
                                                 Đã hoàn thành
                                             </span>
-                                        ) : (
-                                            <span style={{
-                                                color: '#e74c3c', fontWeight: 'bold',
-                                                padding: '4px 10px', borderRadius: '20px',
-                                                backgroundColor: '#fceae8', fontSize: '12px',
-                                                display: 'inline-block'
-                                            }}>
+                                    ) : (
+                                        <span style={{
+                                            color: '#e74c3c', fontWeight: 'bold',
+                                            padding: '4px 10px', borderRadius: '20px',
+                                            backgroundColor: '#fceae8', fontSize: '12px',
+                                            display: 'inline-block'
+                                        }}>
                                                 Chưa thanh toán
                                             </span>
-                                        )}
-                                    </td>
+                                    )}
+                                </td>
 
-                                    <td style={tdStyle}>
-                                        <button onClick={() => handleInvoiceClick(booking)} style={btnInvoiceStyle}>Invoice</button>
-                                    </td>
-                                    <td style={tdStyle}>
-                                        <span onClick={() => openEditModal(booking.guest)} style={{ cursor: 'pointer', color: '#f39c12', fontSize: '18px' }}>✏️</span>
-                                    </td>
-                                </tr>
-                            )
-                        }) : (
-                            <tr><td colSpan="10" style={{ ...tdStyle, color: 'red' }}>Chưa có dữ liệu phòng hoặc không tìm thấy!</td></tr>
-                        )}
+                                <td style={tdStyle}>
+                                    <button onClick={() => handleInvoiceClick(booking)} style={btnInvoiceStyle}>Invoice</button>
+                                </td>
+                                <td style={tdStyle}>
+                                    <span onClick={() => openEditModal(booking.guest)} style={{ cursor: 'pointer', color: '#f39c12', fontSize: '18px' }}>✏️</span>
+                                </td>
+                            </tr>
+                        )
+                    }) : (
+                        <tr><td colSpan="10" style={{ ...tdStyle, color: 'red' }}>Chưa có dữ liệu phòng hoặc không tìm thấy!</td></tr>
+                    )}
                     </tbody>
                 </table>
             </div>
@@ -283,24 +332,35 @@ function BookingInfo() {
                 </div>
             )}
 
-            <button onClick={openAddModal} style={fabStyle} title="Thêm khách mới">+</button>
+            <button onClick={openAddModal} style={fabStyle} title="Thêm khách & Đặt phòng mới">+</button>
 
             {showGuestModal && (
                 <div style={overlayStyle}>
                     <div style={modalStyle}>
                         <h3 style={{ color: '#125c61', marginTop: 0 }}>
-                            {isEditing ? '📝 Sửa Khách Hàng' : '👤 Thêm Khách Hàng'}
+                            {isEditing ? '📝 Sửa Khách Hàng' : '🛎️ Đặt Phòng Mới'}
                         </h3>
                         <form onSubmit={handleSaveGuest}>
-                            <div style={{ marginBottom: '15px' }}>
-                                <label style={labelStyle}>Họ và Tên:</label>
+                            <div style={{ marginBottom: '10px' }}>
+                                <label style={labelStyle}>Họ và Tên (*):</label>
                                 <input
                                     type="text" required style={inputStyle}
                                     value={guestForm.guestName}
                                     onChange={e => setGuestForm({ ...guestForm, guestName: e.target.value })}
                                 />
                             </div>
-                            <div style={{ marginBottom: '15px' }}>
+
+                            {/* FIX: Form input nhập CCCD bắt buộc */}
+                            <div style={{ marginBottom: '10px' }}>
+                                <label style={labelStyle}>CCCD/Passport (*):</label>
+                                <input
+                                    type="text" required style={inputStyle}
+                                    value={guestForm.idCard}
+                                    onChange={e => setGuestForm({ ...guestForm, idCard: e.target.value })}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '10px' }}>
                                 <label style={labelStyle}>Số điện thoại:</label>
                                 <input
                                     type="text" required style={inputStyle}
@@ -308,39 +368,68 @@ function BookingInfo() {
                                     onChange={e => setGuestForm({ ...guestForm, phone: e.target.value })}
                                 />
                             </div>
-                            <div style={{ marginBottom: '15px' }}>
-                                <label style={labelStyle}>Ngày nhận phòng (Check-in):</label>
-                                <input
-                                    type="date" required style={inputStyle}
-                                    value={guestForm.checkInDate || ''}
-                                    onChange={e => setGuestForm({ ...guestForm, checkInDate: e.target.value })}
-                                />
-                            </div>
-                            <div style={{ marginBottom: '15px' }}>
-                                <label style={labelStyle}>Ngày trả phòng (Check-out):</label>
-                                <input
-                                    type="date" required style={inputStyle}
-                                    value={guestForm.checkOutDate || ''}
-                                    onChange={e => setGuestForm({ ...guestForm, checkOutDate: e.target.value })}
-                                />
-                            </div>
-                            <div style={{ marginBottom: '20px' }}>
-                                <label style={labelStyle}>Loại phòng:</label>
-                                <select
-                                    required
-                                    style={inputStyle}
-                                    value={guestForm.roomType}
-                                    onChange={e => setGuestForm({ ...guestForm, roomType: e.target.value })}
-                                >
-                                    <option value="Single Standard">Single Standard</option>
-                                    <option value="Single Deluxe">Single Deluxe</option>
-                                    <option value="Family Standard">Family Standard</option>
-                                    <option value="Family Deluxe">Family Deluxe</option>
-                                </select>
+
+                            <div style={{ marginBottom: '10px', display: 'flex', gap: '10px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label style={labelStyle}>Check-in:</label>
+                                    <input
+                                        type="date" required style={inputStyle}
+                                        min={todayStr}
+                                        value={guestForm.checkInDate || ''}
+                                        onChange={e => setGuestForm({ ...guestForm, checkInDate: e.target.value })}
+                                    />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label style={labelStyle}>Check-out:</label>
+                                    <input
+                                        type="date" required style={inputStyle}
+                                        min={guestForm.checkInDate || todayStr}
+                                        value={guestForm.checkOutDate || ''}
+                                        onChange={e => setGuestForm({ ...guestForm, checkOutDate: e.target.value })}
+                                    />
+                                </div>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                                <button type="submit" style={{ ...btnModalStyle, backgroundColor: '#125c61' }}>Lưu Lại</button>
+                            {!isEditing && (
+                                <>
+                                    <div style={{ marginBottom: '10px' }}>
+                                        <label style={labelStyle}>Loại phòng:</label>
+                                        <select
+                                            required style={inputStyle}
+                                            value={guestForm.roomType}
+                                            onChange={e => setGuestForm({ ...guestForm, roomType: e.target.value, roomId: '' })}
+                                        >
+                                            <option value="Single Standard">Single Standard</option>
+                                            <option value="Single Deluxe">Single Deluxe</option>
+                                            <option value="Family Standard">Family Standard</option>
+                                            <option value="Family Deluxe">Family Deluxe</option>
+                                        </select>
+                                    </div>
+
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <label style={labelStyle}>Phòng trống (Empty):</label>
+                                        <select
+                                            required style={inputStyle}
+                                            value={guestForm.roomId || ''}
+                                            onChange={e => setGuestForm({ ...guestForm, roomId: e.target.value })}
+                                        >
+                                            <option value="">-- Vui lòng chọn phòng --</option>
+                                            {availableRooms.length > 0 ? (
+                                                availableRooms.map(room => (
+                                                    <option key={room.roomId} value={room.roomId}>
+                                                        Phòng {room.roomNumber}
+                                                    </option>
+                                                ))
+                                            ) : (
+                                                <option value="" disabled>Hết phòng loại này!</option>
+                                            )}
+                                        </select>
+                                    </div>
+                                </>
+                            )}
+
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                                <button type="submit" style={{ ...btnModalStyle, backgroundColor: '#125c61' }}>{isEditing ? 'Lưu Lại' : (guestForm.checkInDate === todayStr ? 'Nhận Phòng Ngay' : 'Đặt Phòng Trước')}</button>
                                 <button type="button" onClick={() => setShowGuestModal(false)} style={{ ...btnModalStyle, backgroundColor: '#95a5a6' }}>Hủy</button>
                             </div>
                         </form>
@@ -369,20 +458,20 @@ function BookingInfo() {
 
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
-                                <tr style={{ borderBottom: '2px solid #333' }}>
-                                    <th style={{ textAlign: 'left', padding: '10px 0' }}>Diễn giải</th>
-                                    <th style={{ textAlign: 'right', padding: '10px 0' }}>Thành tiền</th>
-                                </tr>
+                            <tr style={{ borderBottom: '2px solid #333' }}>
+                                <th style={{ textAlign: 'left', padding: '10px 0' }}>Diễn giải</th>
+                                <th style={{ textAlign: 'right', padding: '10px 0' }}>Thành tiền</th>
+                            </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td style={{ padding: '10px 0', borderBottom: '1px dashed #ccc' }}>Tiền phòng ({invoiceData.nights} đêm)</td>
-                                    <td style={{ textAlign: 'right', borderBottom: '1px dashed #ccc' }}>{formatCurrency(invoiceData.roomTotal)}</td>
-                                </tr>
-                                <tr>
-                                    <td style={{ padding: '10px 0' }}>Tiền dịch vụ</td>
-                                    <td style={{ textAlign: 'right' }}>{formatCurrency(invoiceData.serviceTotal)}</td>
-                                </tr>
+                            <tr>
+                                <td style={{ padding: '10px 0', borderBottom: '1px dashed #ccc' }}>Tiền phòng ({invoiceData.nights} đêm)</td>
+                                <td style={{ textAlign: 'right', borderBottom: '1px dashed #ccc' }}>{formatCurrency(invoiceData.roomTotal)}</td>
+                            </tr>
+                            <tr>
+                                <td style={{ padding: '10px 0' }}>Tiền dịch vụ</td>
+                                <td style={{ textAlign: 'right' }}>{formatCurrency(invoiceData.serviceTotal)}</td>
+                            </tr>
                             </tbody>
                         </table>
 
@@ -444,7 +533,7 @@ const toastTitleStyle = { fontWeight: 'bold', fontSize: '15px', color: '#333', m
 const toastDescriptionStyle = { fontSize: '13px', color: '#666', lineHeight: '1.4' };
 const toastCloseBtnStyle = { position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '16px', color: '#aaa', cursor: 'pointer', fontWeight: 'bold' };
 const fabStyle = { position: 'fixed', bottom: '40px', right: '40px', width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#f39c12', color: 'white', fontSize: '30px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.3)', zIndex: 999 };
-const modalStyle = { backgroundColor: 'white', padding: '30px', borderRadius: '15px', width: '350px' };
+const modalStyle = { backgroundColor: 'white', padding: '30px', borderRadius: '15px', width: '380px' };
 const inputStyle = { width: '100%', padding: '10px', marginTop: '5px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' };
 const labelStyle = { fontSize: '14px', fontWeight: '600' };
 const btnModalStyle = { flex: 1, padding: '12px', border: 'none', borderRadius: '8px', color: 'white', fontWeight: 'bold', cursor: 'pointer' };

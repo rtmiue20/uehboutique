@@ -10,12 +10,13 @@ function RoomStatus() {
 
     const [searchRoomNumber, setSearchRoomNumber] = useState("");
     const [showSearchBox, setShowSearchBox] = useState(false);
-    const [toastMessage, setToastMessage] = useState("");
 
-    // --- STATE MỚI CHO BỘ LỌC VÀ PHÂN TRANG ---
-    const [filterStatus, setFilterStatus] = useState('All'); // 'All', 'Empty', 'Currently', 'Dirty'
+    // --- STATE MỚI: MẢNG TOAST ĐỂ XẾP CHỒNG THÔNG BÁO ---
+    const [toasts, setToasts] = useState([]);
+
+    const [filterStatus, setFilterStatus] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);
-    const roomsPerPage = 30; // Chia 30 phòng mỗi trang
+    const roomsPerPage = 30;
 
     useEffect(() => {
         const fetchAllData = async () => {
@@ -72,6 +73,17 @@ function RoomStatus() {
         fetchAllData();
     }, []);
 
+    // --- HÀM THÊM THÔNG BÁO MỚI VÀO MẢNG ---
+    const addToast = (message) => {
+        const id = Date.now(); // Tạo ID duy nhất bằng thời gian hiện tại
+        setToasts(prevToasts => [...prevToasts, { id, message }]);
+
+        // Tự động xóa thông báo này sau 3 giây dựa vào ID
+        setTimeout(() => {
+            setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
+        }, 3000);
+    };
+
     const handleRoomClick = (room) => {
         setSelectedRoom(room);
         setShowInfoModal(true);
@@ -83,42 +95,44 @@ function RoomStatus() {
         setShowCleanModal(true);
     };
 
-    const confirmCleaning = () => {
-        const updatedRooms = rooms.map(room => {
-            if (room.roomId === selectedRoom.roomId) {
-                return { ...room, status: 'Empty' };
-            }
-            return room;
-        });
+    const confirmCleaning = async () => {
+        try {
+            await axios.put(`http://localhost:8080/api/rooms/${selectedRoom.roomId}/clean`);
 
-        setRooms(updatedRooms);
-        setToastMessage(`Đã điều phối nhân viên dọn dẹp cho phòng ${selectedRoom.roomNumber}!`);
-        setShowCleanModal(false);
+            const updatedRooms = rooms.map(room => {
+                if (room.roomId === selectedRoom.roomId) {
+                    return { ...room, status: 'Empty' };
+                }
+                return room;
+            });
 
-        setTimeout(() => {
-            setToastMessage("");
-        }, 3000);
+            setRooms(updatedRooms);
+
+            // Gọi hàm addToast thay vì setToastMessage như cũ
+            addToast(`Đã điều phối nhân viên dọn dẹp cho phòng ${selectedRoom.roomNumber}!`);
+            setShowCleanModal(false);
+
+        } catch (error) {
+            console.error("Lỗi khi lưu trạng thái dọn dẹp xuống DB:", error);
+            alert("Có lỗi xảy ra khi cập nhật trạng thái phòng. Vui lòng kiểm tra lại server!");
+        }
     };
 
-    // --- LOGIC LỌC TÌM KIẾM & TRẠNG THÁI ---
     const filteredRooms = rooms.filter(room => {
         const matchSearch = room.roomNumber.toLowerCase().includes(searchRoomNumber.toLowerCase());
         const matchStatus = filterStatus === 'All' ? true : room.status === filterStatus;
         return matchSearch && matchStatus;
     });
 
-    // --- LOGIC PHÂN TRANG ---
     const indexOfLastRoom = currentPage * roomsPerPage;
     const indexOfFirstRoom = indexOfLastRoom - roomsPerPage;
     const currentRooms = filteredRooms.slice(indexOfFirstRoom, indexOfLastRoom);
     const totalPages = Math.ceil(filteredRooms.length / roomsPerPage);
 
-    // Reset về trang 1 khi đổi bộ lọc hoặc tìm kiếm
     useEffect(() => {
         setCurrentPage(1);
     }, [searchRoomNumber, filterStatus]);
 
-    // --- TẠO MẢNG TAB ĐỂ RENDER ---
     const filterTabs = [
         { id: 'All', label: 'Tất cả' },
         { id: 'Empty', label: 'Trống' },
@@ -129,7 +143,20 @@ function RoomStatus() {
     return (
         <div style={{ padding: '30px', fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", backgroundColor: '#f5f7f9', minHeight: '100vh', position: 'relative' }}>
 
-            {/* BANNER CHUẨN ĐỒNG BỘ */}
+            <style>
+                {`
+                    @keyframes slideInRight {
+                        0% { transform: translateX(100%); opacity: 0; }
+                        60% { transform: translateX(-10%); opacity: 1; }
+                        100% { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes progressShrink {
+                        0% { width: 100%; }
+                        100% { width: 0%; }
+                    }
+                `}
+            </style>
+
             <div style={bannerStyle}>
                 <h1 style={{ color: '#125c61', margin: 0, fontSize: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                     🏨 ĐIỀU PHỐI PHÒNG
@@ -140,10 +167,7 @@ function RoomStatus() {
             </div>
 
             <div style={cardStyle}>
-                {/* THANH CÔNG CỤ: TABS BỘ LỌC VÀ TÌM KIẾM */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
-
-                    {/* TABS LỌC TRẠNG THÁI */}
                     <div style={{ display: 'flex', gap: '10px' }}>
                         {filterTabs.map(tab => {
                             const isActive = filterStatus === tab.id;
@@ -169,7 +193,6 @@ function RoomStatus() {
                         })}
                     </div>
 
-                    {/* Ô TÌM KIẾM */}
                     <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
                         {showSearchBox && (
                             <input
@@ -203,7 +226,6 @@ function RoomStatus() {
                     </div>
                 </div>
 
-                {/* DANH SÁCH PHÒNG (ĐÃ PHÂN TRANG) */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center', minHeight: '300px', alignContent: 'flex-start' }}>
                     {currentRooms.length > 0 ? currentRooms.map((room, index) => {
                         let bgColor = room.status === 'Empty' ? '#2ecc71' : room.status === 'Dirty' ? '#f1c40f' : '#e74c3c';
@@ -222,11 +244,7 @@ function RoomStatus() {
                                 onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                             >
                                 <h3 style={{ margin: '5px 0', fontSize: '20px' }}>{room.roomNumber}</h3>
-
-                                <p style={{ margin: '0 0 5px 0', fontSize: '13px', opacity: 0.9 }}>
-                                    {room.typeName}
-                                </p>
-
+                                <p style={{ margin: '0 0 5px 0', fontSize: '13px', opacity: 0.9 }}>{room.typeName}</p>
                                 <span style={{ fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', backgroundColor: 'rgba(0,0,0,0.2)', padding: '2px 8px', borderRadius: '4px' }}>
                                     {room.status}
                                 </span>
@@ -251,7 +269,6 @@ function RoomStatus() {
                     )}
                 </div>
 
-                {/* THANH PHÂN TRANG (PAGINATION) */}
                 {totalPages > 1 && (
                     <div style={{ display: 'flex', justifyContent: 'center', marginTop: '40px', gap: '8px' }}>
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
@@ -276,7 +293,6 @@ function RoomStatus() {
                 )}
             </div>
 
-            {/* POPUP INFO */}
             {showInfoModal && selectedRoom && (
                 <div style={modalOverlayStyle}>
                     <div style={modalContentStyle}>
@@ -301,7 +317,6 @@ function RoomStatus() {
                 </div>
             )}
 
-            {/* POPUP HOUSEKEEPER */}
             {showCleanModal && selectedRoom && (
                 <div style={modalOverlayStyle}>
                     <div style={modalContentStyle}>
@@ -322,13 +337,25 @@ function RoomStatus() {
                 </div>
             )}
 
-            {/* CUSTOM TOAST MESSAGE */}
-            {toastMessage && (
-                <div style={toastNotificationStyle}>
-                    <span style={{ fontSize: '20px' }}>✅</span>
-                    <span>{toastMessage}</span>
-                </div>
-            )}
+            {/* VÙNG CHỨA CÁC TOAST XẾP CHỒNG (CONTAINER) */}
+            <div style={toastContainerStyle}>
+                {toasts.map((toast) => (
+                    <div key={toast.id} style={toastNotificationStyle}>
+                        <div style={iconWrapperStyle}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'white' }}>
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontWeight: 'bold', color: '#2c3e50', fontSize: '16px' }}>Thành công!</span>
+                            <span style={{ color: '#7f8c8d', fontSize: '14px', marginTop: '4px' }}>{toast.message}</span>
+                        </div>
+
+                        <div style={progressBarStyle}></div>
+                    </div>
+                ))}
+            </div>
 
         </div>
     );
@@ -342,24 +369,50 @@ const modalOverlayStyle = { position: 'fixed', top: 0, left: 0, right: 0, bottom
 const modalContentStyle = { backgroundColor: 'white', padding: '30px', borderRadius: '15px', width: '380px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' };
 const closeBtnStyle = { marginTop: '25px', padding: '12px 20px', backgroundColor: '#125c61', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', width: '100%', fontWeight: 'bold', fontSize: '14px' };
 
-const toastNotificationStyle = {
+// --- STYLE CHO HỆ THỐNG TOAST XẾP CHỒNG ---
+const toastContainerStyle = {
     position: 'fixed',
     top: '30px',
     right: '30px',
-    backgroundColor: '#fff',
-    borderLeft: '5px solid #2ecc71',
-    color: '#333',
-    padding: '16px 24px',
-    borderRadius: '8px',
-    boxShadow: '0 6px 20px rgba(0,0,0,0.15)',
+    display: 'flex',
+    flexDirection: 'column', // Xếp chồng từ trên xuống dưới
+    gap: '15px', // Khoảng cách giữa các cục toast
     zIndex: 9999,
+};
+
+const toastNotificationStyle = {
+    backgroundColor: '#ffffff',
+    padding: '16px 24px 16px 16px',
+    borderRadius: '12px',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    fontSize: '15px',
-    fontWeight: '500',
-    transition: 'all 0.3s ease-in-out',
-    animation: 'slideInRight 0.4s ease-out forwards'
+    gap: '16px',
+    overflow: 'hidden',
+    position: 'relative', // Để cái progress bar bám vào bottom
+    animation: 'slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards',
+    transition: 'all 0.3s ease', // Hiệu ứng đẩy lên mượt mà khi cái trên cùng biến mất
+    minWidth: '320px'
+};
+
+const iconWrapperStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '38px',
+    height: '38px',
+    backgroundColor: '#2ecc71',
+    borderRadius: '50%',
+    boxShadow: '0 4px 10px rgba(46, 204, 113, 0.4)'
+};
+
+const progressBarStyle = {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    height: '4px',
+    backgroundColor: '#2ecc71',
+    animation: 'progressShrink 3s linear forwards'
 };
 
 export default RoomStatus;
