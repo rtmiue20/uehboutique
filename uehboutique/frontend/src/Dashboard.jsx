@@ -7,9 +7,10 @@ function Dashboard() {
         availableRooms: 0,
         occupiedRooms: 0,
         todayCheckIns: 0,
-        totalRevenue: 0
+        totalRevenue: 0,
+        currentMonthLabel: ""
     });
-    const [recentBookings, setRecentBookings] = useState([]);
+    const [recentActivities, setRecentActivities] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -30,35 +31,43 @@ function Dashboard() {
                 const roomsRes = await axios.get('http://localhost:8080/api/rooms');
                 rooms = Array.isArray(roomsRes.data) ? roomsRes.data : [];
             } catch (e) {
-                console.warn("Chưa có API phòng, dùng data ảo.");
                 rooms = new Array(20).fill({ status: 'EMPTY' });
             }
 
-            // --- LOGIC TÍNH TOÁN ĐÃ ĐƯỢC FIX ---
-            const today = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const todayStr = now.toISOString().split('T')[0];
 
-            // FIX 1: Đếm phòng đang ở dựa vào API rooms (chính xác hơn với sơ đồ). 
-            // Cover luôn các trường hợp chữ hoa/thường hoặc tên trạng thái khác nhau.
             let occupied = 0;
             if (rooms.length > 0 && rooms[0].status) {
                 occupied = rooms.filter(r =>
-                    r.status.toUpperCase() === 'CURRENTLY' ||
-                    r.status.toUpperCase() === 'OCCUPIED' ||
-                    r.status.toUpperCase() === 'CHECKED-IN'
+                    ['CURRENTLY', 'OCCUPIED', 'CHECKED-IN'].includes(r.status.toUpperCase())
                 ).length;
             } else {
-                // Fallback: nếu room không có status, đếm từ bookings
-                occupied = bookings.filter(b => b.status && b.status.toLowerCase() === 'checked-in').length;
+                occupied = bookings.filter(b => b.status && String(b.status).toLowerCase().includes('in')).length;
             }
 
-            const checkinsToday = bookings.filter(b => b.checkInDate === today).length;
+            const checkinsToday = bookings.filter(b => b.checkInDate === todayStr).length;
 
-            const revenue = bookings.reduce((sum, b) => {
-                const isPaid = b.status && (b.status.toLowerCase() === 'checked-out' || b.status.toLowerCase() === 'check-out');
-                return isPaid ? sum + (b.totalAmount || 0) : sum;
+            // --- LOGIC DOANH THU DỰ TÍNH ---
+            const estimatedMonthlyRevenue = bookings.reduce((sum, b) => {
+                // Chỉ lấy ngày Check-in để tính doanh thu dự tính cho tháng đó
+                const dateToCheck = b.checkInDate;
+                if (!dateToCheck) return sum;
+
+                const bDate = new Date(dateToCheck);
+                const isThisMonth = bDate.getMonth() === currentMonth && bDate.getFullYear() === currentYear;
+
+                const currentStatus = b.status ? String(b.status).toLowerCase().trim() : '';
+
+                // Lấy tổng tiền dự kiến (từ số ngày ở + dịch vụ đã đặt)
+                const amount = Number(b.totalAmount || b.totalPrice || b.price || 0);
+
+                // Cộng dồn nếu booking có check-in trong tháng hiện tại và không bị hủy
+                return (isThisMonth) ? sum + amount : sum;
             }, 0);
 
-            // Xử lý tổng số phòng thực tế (tránh lỗi chia cho 0)
             const total = rooms.length > 0 ? rooms.length : 20;
 
             setStats({
@@ -66,10 +75,31 @@ function Dashboard() {
                 occupiedRooms: occupied,
                 availableRooms: total - occupied,
                 todayCheckIns: checkinsToday,
-                totalRevenue: revenue
+                totalRevenue: estimatedMonthlyRevenue,
+                currentMonthLabel: `Tháng ${currentMonth + 1}`
             });
 
-            setRecentBookings(bookings.slice(0, 5));
+            // --- LOGIC HOẠT ĐỘNG GẦN ĐÂY ---
+            let activities = bookings.map(b => ({
+                // Dùng bookingId làm mốc định danh chính xác nhất cho thứ tự thời gian
+                bookingId: b.bookingId || b.id || 0,
+                guestName: b.guest?.guestName || b.guestName || 'Khách lẻ',
+                roomNumber: b.room?.roomNumber || b.roomNumber || '---',
+                time: b.updatedAt || b.checkInDate,
+                action: b.status || 'Booking'
+            }));
+
+            // Sắp xếp:
+            // 1. Ưu tiên BookingId giảm dần (Người mới nhất luôn có ID cao nhất)
+            // 2. Sau đó mới xét đến updatedAt (Nếu có timestamp)
+            activities.sort((a, b) => {
+                if (b.bookingId !== a.bookingId) {
+                    return b.bookingId - a.bookingId;
+                }
+                return new Date(b.time).getTime() - new Date(a.time).getTime();
+            });
+
+            setRecentActivities(activities.slice(0, 5));
             setLoading(false);
         } catch (error) {
             console.error("Lỗi tải dữ liệu Dashboard:", error);
@@ -78,6 +108,14 @@ function Dashboard() {
     };
 
     const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+
+    const getBadgeStyle = (actionStr) => {
+        const action = String(actionStr).toLowerCase();
+        if (action.includes('in') || action === 'currently') return { bg: '#e8f8f5', color: '#27ae60' };
+        if (action.includes('out') || action.includes('hoàn thành')) return { bg: '#fef9e7', color: '#f39c12' };
+        if (action.includes('order')) return { bg: '#ebf5fb', color: '#2980b9' };
+        return { bg: '#f2f3f4', color: '#7f8c8d' };
+    };
 
     if (loading) return <div style={{ padding: '20px' }}>Đang tải dữ liệu...</div>;
 
@@ -104,44 +142,49 @@ function Dashboard() {
                     <small>Lượt khách dự kiến</small>
                 </div>
                 <div style={{ ...cardStyle, borderLeft: '5px solid #125c61' }}>
-                    <span style={cardLabelStyle}>Doanh Thu Dự Tính</span>
+                    <span style={cardLabelStyle}>Doanh Thu Dự Tính {stats.currentMonthLabel}</span>
                     <h2 style={{ color: '#125c61', margin: '10px 0' }}>{formatCurrency(stats.totalRevenue)}</h2>
-                    <small>Dựa trên hóa đơn Check-out</small>
+                    <small>Dựa trên lịch Check-in</small>
                 </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '25px', marginTop: '30px' }}>
                 <div style={sectionStyle}>
                     <h3 style={{ marginTop: 0, color: '#333', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>Hoạt động gần đây</h3>
+
                     <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
                         <thead>
-                            <tr style={{ textAlign: 'left', color: '#777', fontSize: '13px' }}>
-                                <th style={{ padding: '12px 5px' }}>Khách hàng</th>
-                                <th>Phòng</th>
-                                <th>Ngày đến</th>
-                                <th>Trạng thái</th>
-                            </tr>
+                        <tr style={{ color: '#777', fontSize: '13px', borderBottom: '1px solid #eee' }}>
+                            <th style={{ padding: '12px 10px', textAlign: 'left', width: '30%' }}>Khách hàng</th>
+                            <th style={{ padding: '12px 10px', textAlign: 'center', width: '15%' }}>Phòng</th>
+                            <th style={{ padding: '12px 10px', textAlign: 'left', width: '35%' }}>Thời gian</th>
+                            <th style={{ padding: '12px 10px', textAlign: 'center', width: '20%' }}>Trạng thái</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            {recentBookings.map((b, i) => {
-                                const isCheckedIn = b.status && b.status.toLowerCase() === 'checked-in';
-                                return (
-                                    <tr key={i} style={{ borderBottom: '1px solid #f9f9f9', fontSize: '14px' }}>
-                                        <td style={{ padding: '12px 5px' }}><b>{b.guest?.guestName || 'Khách lẻ'}</b></td>
-                                        <td><span style={roomBadgeStyle}>{b.room?.roomNumber || '---'}</span></td>
-                                        <td>{b.checkInDate}</td>
-                                        <td>
-                                            <span style={{
-                                                padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
-                                                backgroundColor: isCheckedIn ? '#e8f8f5' : '#fef9e7',
-                                                color: isCheckedIn ? '#27ae60' : '#f39c12'
-                                            }}>
-                                                {b.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                        {recentActivities.map((activity, i) => {
+                            const badgeColors = getBadgeStyle(activity.action);
+                            return (
+                                <tr key={i} style={{ borderBottom: '1px solid #f9f9f9', fontSize: '14px' }}>
+                                    <td style={{ padding: '12px 10px', textAlign: 'left' }}><b>{activity.guestName}</b></td>
+                                    <td style={{ padding: '12px 10px', textAlign: 'center' }}>
+                                        <span style={roomBadgeStyle}>{activity.roomNumber}</span>
+                                    </td>
+                                    <td style={{ padding: '12px 10px', textAlign: 'left' }}>
+                                        {activity.time.length > 16 ? activity.time.substring(0, 16).replace('T', ' ') : activity.time}
+                                    </td>
+                                    <td style={{ padding: '12px 10px', textAlign: 'center' }}>
+                                        <span style={{
+                                            padding: '5px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
+                                            backgroundColor: badgeColors.bg, color: badgeColors.color,
+                                            display: 'inline-block', minWidth: '85px', textAlign: 'center'
+                                        }}>
+                                            {activity.action}
+                                        </span>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                         </tbody>
                     </table>
                 </div>
@@ -167,7 +210,7 @@ const statsGridStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,
 const cardStyle = { backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' };
 const cardLabelStyle = { fontSize: '13px', color: '#888', fontWeight: '600', textTransform: 'uppercase' };
 const sectionStyle = { backgroundColor: 'white', padding: '25px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' };
-const roomBadgeStyle = { backgroundColor: '#125c61', color: 'white', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold' };
+const roomBadgeStyle = { backgroundColor: '#125c61', color: 'white', padding: '4px 10px', borderRadius: '4px', fontWeight: 'bold' };
 const quickBtnStyle = {
     padding: '12px', backgroundColor: '#f39c12', color: 'white', border: 'none',
     borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', textAlign: 'left', transition: '0.3s'

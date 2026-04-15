@@ -19,11 +19,14 @@ function Layout() {
     return (
         <div style={{ backgroundColor: '#f5f7f9', minHeight: '100vh', fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
             {/* --- HEADER (LOGO) --- */}
-            <div style={{ textAlign: 'center', padding: '15px 0', backgroundColor: 'white' }}>
-                <h1 style={{ margin: 0, color: '#2c3e50', fontSize: '24px' }}>
-                    <span style={{ color: '#27ae60' }}>🏨</span> UEH BOUTIQUE HOTEL
-                </h1>
-                <p style={{ margin: 0, fontSize: '12px', color: '#7f8c8d' }}>Your Intelligent Place To Relax</p>
+            <div style={{ textAlign: 'center', padding: '10px 0', backgroundColor: 'white' }}>
+                {/* Thay thế <h1> cũ bằng thẻ <img>, chỉnh chiều cao (height) là 55px để bằng size logo cũ */}
+                <img
+                    src="https://hotel.ueh.edu.vn/wp-content/uploads/2021/02/logo.svg"
+                    alt="UEH BOUTIQUE HOTEL Logo"
+                    style={{ height: '55px', width: 'auto', display: 'block', margin: '0 auto' }}
+                />
+                <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#008080' }}>Your Intelligent Place To Relax</p>
             </div>
 
             {/* --- THANH MENU MÀU XANH --- */}
