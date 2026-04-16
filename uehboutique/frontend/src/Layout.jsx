@@ -19,24 +19,48 @@ function Layout() {
     return (
         <div style={{ backgroundColor: '#f5f7f9', minHeight: '100vh', fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
             {/* --- HEADER (LOGO) --- */}
-            <div style={{ textAlign: 'center', padding: '10px 0', backgroundColor: 'white' }}>
-                {/* Thay thế <h1> cũ bằng thẻ <img>, chỉnh chiều cao (height) là 55px để bằng size logo cũ */}
+            <div style={{
+                textAlign: 'center',
+                padding: '10px 0',
+                backgroundColor: 'white',
+                position: 'relative', // Thêm để làm mốc cho logo góc trái
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                minHeight: '80px' // Đảm bảo khoảng dọc đủ rộng
+            }}>
+                {/* Logo mới ở góc trái */}
+                <img
+                    src="https://www.ueh.edu.vn/images/upload/editer/Thumb%20Luoc%20su.jpg"
+                    alt="UEH Logo Left"
+                    style={{
+                        position: 'absolute',
+                        left: '0px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        height: '140px',
+                        width: 'auto'
+                    }}
+                />
+
+                {/* Logo chính ở giữa */}
                 <img
                     src="https://hotel.ueh.edu.vn/wp-content/uploads/2021/02/logo.svg"
                     alt="UEH BOUTIQUE HOTEL Logo"
                     style={{ height: '55px', width: 'auto', display: 'block', margin: '0 auto' }}
                 />
-                <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#008080' }}>Your Intelligent Place To Relax</p>
+                <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#008080' }}>Your Intelligent Place To Relax</p>
             </div>
 
             {/* --- THANH MENU MÀU XANH --- */}
             <div style={{
-                backgroundColor: '#125c61', // Màu xanh lục đậm theo thiết kế
+                backgroundColor: '#125c61',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
                 position: 'relative',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                zIndex: 10
             }}>
                 {menuItems.map((item) => {
                     const isActive = location.pathname === item.path;
@@ -47,7 +71,7 @@ function Layout() {
                             padding: '15px 25px',
                             fontWeight: 'bold',
                             fontSize: '15px',
-                            backgroundColor: isActive ? '#0e4a4e' : 'transparent', // Màu nền đậm hơn nếu đang chọn
+                            backgroundColor: isActive ? '#0e4a4e' : 'transparent',
                             borderBottom: isActive ? '4px solid #f39c12' : '4px solid transparent',
                             transition: 'all 0.3s'
                         }}>
@@ -56,9 +80,8 @@ function Layout() {
                     );
                 })}
 
-                {/* --- Nút User bên góc phải (Đã được nâng cấp thành Dropdown) --- */}
+                {/* --- Nút User bên góc phải --- */}
                 <div style={{ position: 'absolute', right: '30px' }}>
-                    {/* Phần hiển thị tên và avatar (Click vào để mở menu) */}
                     <div
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         style={{ display: 'flex', alignItems: 'center', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
@@ -70,11 +93,10 @@ function Layout() {
                         }}>👤</div>
                     </div>
 
-                    {/* Khung Dropdown Menu (Chỉ hiện khi isMenuOpen = true) */}
                     {isMenuOpen && (
                         <div style={{
                             position: 'absolute',
-                            top: '50px', // Đẩy xuống dưới một chút để không đè lên avatar
+                            top: '50px',
                             right: '0',
                             backgroundColor: 'white',
                             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
@@ -85,14 +107,14 @@ function Layout() {
                         }}>
                             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                                 <li style={dropdownItemStyle} onClick={() => { alert("Tính năng đang phát triển!"); setIsMenuOpen(false); }}>
-                                    ✏️ Sửa thông tin
+                                    Sửa thông tin
                                 </li>
                                 <li style={dropdownItemStyle} onClick={() => { alert("Tính năng đang phát triển!"); setIsMenuOpen(false); }}>
-                                    🔒 Đổi mật khẩu
+                                    Đổi mật khẩu
                                 </li>
                                 <li style={{ ...dropdownItemStyle, color: '#e74c3c', borderTop: '1px solid #eee' }}
                                     onClick={() => window.location.href = '/'}>
-                                    🚪 Đăng xuất
+                                    Đăng xuất
                                 </li>
                             </ul>
                         </div>
@@ -102,13 +124,12 @@ function Layout() {
 
             {/* --- PHẦN NỘI DUNG THAY ĐỔI --- */}
             <div style={{ padding: '30px 50px' }}>
-                <Outlet /> {/* Nơi các trang (Trang chủ, Đặt phòng...) sẽ hiện ra */}
+                <Outlet />
             </div>
         </div>
     );
 }
 
-// CSS cho các mục trong Menu xổ xuống
 const dropdownItemStyle = {
     padding: '12px 15px',
     cursor: 'pointer',

@@ -13,19 +13,43 @@ function Dashboard() {
     const [recentActivities, setRecentActivities] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // --- STATE CHO IMAGE SLIDER ---
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const slides = [
+        {
+            url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=500&q=80",
+            title: "Phòng nghỉ sang trọng",
+            desc: "Tiêu chuẩn 5 sao"
+        },
+        {
+            url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=500&q=80",
+            title: "Ẩm thực tinh tế",
+            desc: "Hương vị Á - Âu"
+        },
+        {
+            url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=500&q=80",
+            title: "Trải nghiệm đẳng cấp",
+            desc: "Tận hưởng từng giây phút"
+        }
+    ];
+
     useEffect(() => {
         fetchDashboardData();
+
+        // Tự động chuyển slide sau mỗi 3 giây
+        const slideTimer = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % slides.length);
+        }, 3000);
+
+        return () => clearInterval(slideTimer);
     }, []);
 
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-
-            // 1. Lấy dữ liệu bookings
             const bookingsRes = await axios.get('http://localhost:8080/api/bookings');
             const bookings = Array.isArray(bookingsRes.data) ? bookingsRes.data : [];
 
-            // 2. Lấy dữ liệu phòng
             let rooms = [];
             try {
                 const roomsRes = await axios.get('http://localhost:8080/api/rooms');
@@ -50,21 +74,12 @@ function Dashboard() {
 
             const checkinsToday = bookings.filter(b => b.checkInDate === todayStr).length;
 
-            // --- LOGIC DOANH THU DỰ TÍNH ---
             const estimatedMonthlyRevenue = bookings.reduce((sum, b) => {
-                // Chỉ lấy ngày Check-in để tính doanh thu dự tính cho tháng đó
                 const dateToCheck = b.checkInDate;
                 if (!dateToCheck) return sum;
-
                 const bDate = new Date(dateToCheck);
                 const isThisMonth = bDate.getMonth() === currentMonth && bDate.getFullYear() === currentYear;
-
-                const currentStatus = b.status ? String(b.status).toLowerCase().trim() : '';
-
-                // Lấy tổng tiền dự kiến (từ số ngày ở + dịch vụ đã đặt)
                 const amount = Number(b.totalAmount || b.totalPrice || b.price || 0);
-
-                // Cộng dồn nếu booking có check-in trong tháng hiện tại và không bị hủy
                 return (isThisMonth) ? sum + amount : sum;
             }, 0);
 
@@ -79,9 +94,7 @@ function Dashboard() {
                 currentMonthLabel: `Tháng ${currentMonth + 1}`
             });
 
-            // --- LOGIC HOẠT ĐỘNG GẦN ĐÂY ---
             let activities = bookings.map(b => ({
-                // Dùng bookingId làm mốc định danh chính xác nhất cho thứ tự thời gian
                 bookingId: b.bookingId || b.id || 0,
                 guestName: b.guest?.guestName || b.guestName || 'Khách lẻ',
                 roomNumber: b.room?.roomNumber || b.roomNumber || '---',
@@ -89,13 +102,8 @@ function Dashboard() {
                 action: b.status || 'Booking'
             }));
 
-            // Sắp xếp:
-            // 1. Ưu tiên BookingId giảm dần (Người mới nhất luôn có ID cao nhất)
-            // 2. Sau đó mới xét đến updatedAt (Nếu có timestamp)
             activities.sort((a, b) => {
-                if (b.bookingId !== a.bookingId) {
-                    return b.bookingId - a.bookingId;
-                }
+                if (b.bookingId !== a.bookingId) return b.bookingId - a.bookingId;
                 return new Date(b.time).getTime() - new Date(a.time).getTime();
             });
 
@@ -141,17 +149,39 @@ function Dashboard() {
                     <h2 style={{ color: '#f39c12', margin: '10px 0' }}>{stats.todayCheckIns}</h2>
                     <small>Lượt khách dự kiến</small>
                 </div>
-                <div style={{ ...cardStyle, borderLeft: '5px solid #125c61' }}>
-                    <span style={cardLabelStyle}>Doanh Thu Dự Tính {stats.currentMonthLabel}</span>
-                    <h2 style={{ color: '#125c61', margin: '10px 0' }}>{formatCurrency(stats.totalRevenue)}</h2>
-                    <small>Dựa trên lịch Check-in</small>
+
+                {/* --- BOX ẢNH CHẠY (THAY THẾ DOANH THU) --- */}
+                <div style={{ ...cardStyle, padding: 0, overflow: 'hidden', position: 'relative', minHeight: '140px' }}>
+                    <div style={{
+                        width: '100%', height: '100%',
+                        backgroundImage: `url(${slides[currentSlide].url})`,
+                        backgroundSize: 'cover', backgroundPosition: 'center',
+                        transition: '0.8s ease-in-out',
+                        position: 'absolute'
+                    }}>
+                        <div style={{
+                            backgroundColor: 'rgba(0,0,0,0.4)', color: 'white', height: '100%',
+                            display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 20px'
+                        }}>
+                            <b style={{ fontSize: '15px' }}>{slides[currentSlide].title}</b>
+                            <span style={{ fontSize: '12px', opacity: 0.9 }}>{slides[currentSlide].desc}</span>
+                        </div>
+                    </div>
+                    {/* Chấm nhỏ điều hướng */}
+                    <div style={{ position: 'absolute', bottom: '10px', right: '10px', display: 'flex', gap: '5px' }}>
+                        {slides.map((_, i) => (
+                            <div key={i} style={{
+                                width: '6px', height: '6px', borderRadius: '50%',
+                                backgroundColor: currentSlide === i ? '#f39c12' : 'rgba(255,255,255,0.5)'
+                            }} />
+                        ))}
+                    </div>
                 </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '25px', marginTop: '30px' }}>
                 <div style={sectionStyle}>
                     <h3 style={{ marginTop: 0, color: '#333', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>Hoạt động gần đây</h3>
-
                     <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
                         <thead>
                         <tr style={{ color: '#777', fontSize: '13px', borderBottom: '1px solid #eee' }}>

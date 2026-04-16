@@ -1,7 +1,14 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Thêm công cụ chuyển trang
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const hotelBackgroundImage = 'url(https://th.bing.com/th/id/R.9b7be32cbf8aadb87903dfb4104165fe?rik=RETbHgb3kPR0zQ&pid=ImgRaw&r=0)';
+const backgroundImages = [
+    'url(https://th.bing.com/th/id/R.9b7be32cbf8aadb87903dfb4104165fe?rik=RETbHgb3kPR0zQ&pid=ImgRaw&r=0)',
+    'url(https://hotel.ueh.edu.vn/wp-content/uploads/2021/02/01-1.jpg)',
+    'url(https://hotel.ueh.edu.vn/wp-content/uploads/2021/02/04.jpg)',
+    'url(https://hotel.ueh.edu.vn/wp-content/uploads/2021/02/06.jpg)',
+    'url(https://vietnamluxuryexpress.com/wp-content/uploads/southern-vietnamese-food.jpg)',
+    'url(https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2c/88/bf/20/hanoi-deepfried-pork.jpg?w=900&h=500&s=1)'
+];
 
 function Login() {
     const [currentScreen, setCurrentScreen] = useState('login');
@@ -9,64 +16,135 @@ function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [bgIndex, setBgIndex] = useState(0);
 
-    const navigate = useNavigate(); // Khởi tạo xe ôm chở đi trang khác
+    const navigate = useNavigate();
+
+    // 1. Hiệu ứng đổi ảnh nền
+    useEffect(() => {
+        const bgTimer = setInterval(() => {
+            setBgIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
+        }, 5000);
+        return () => clearInterval(bgTimer);
+    }, []);
+
+    // 2. Hiệu ứng tự động tắt thông báo sau 3 giây
+    useEffect(() => {
+        if (modalState !== 'none') {
+            const timer = setTimeout(() => {
+                setModalState('none');
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [modalState]);
 
     const handleLogin = (e) => {
         e.preventDefault();
+        if (!email.includes('@')) {
+            setModalState('errorEmailFormat');
+            return;
+        }
+        const hasLetter = /[a-zA-Z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        if (!hasLetter || !hasNumber) {
+            setModalState('errorPasswordStrength');
+            return;
+        }
         if (email === 'test@sai.com') {
             setModalState('errorAccountNotFound');
-        } else if (password === 'sai') {
+        } else if (password === 'sai123') {
             setModalState('errorPassword');
         } else if (email && password) {
-            // ĐĂNG NHẬP THÀNH CÔNG -> CHUYỂN SANG TRANG HOME
             navigate('/home');
         }
     };
 
     const handleForgotPassword = (e) => {
         e.preventDefault();
+        if (!email.includes('@')) {
+            setModalState('errorEmailFormat');
+            return;
+        }
         setModalState('success');
     };
 
-    // --- Bác giữ nguyên toàn bộ phần CSS (pageStyle, formCardStyle,...) ở đây ---
-    const pageStyle = { backgroundImage: hotelBackgroundImage, backgroundSize: 'cover', backgroundPosition: 'center', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" };
+    // --- STYLE ---
+    const pageStyle = {
+        backgroundImage: backgroundImages[bgIndex],
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        fontFamily: "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+        transition: 'background-image 1.5s ease-in-out',
+        position: 'relative',
+        overflow: 'hidden'
+    };
+
+
+    const toastStyle = {
+        position: 'fixed',
+        top: modalState !== 'none' ? '20px' : '-100px',
+        right: '20px',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        padding: '15px 25px',
+        borderRadius: '12px',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '15px',
+        zIndex: 9999,
+        transition: 'all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        borderLeft: `6px solid ${modalState === 'success' ? '#2ecc71' : '#e74c3c'}`
+    };
+
     const formCardStyle = { backgroundColor: 'rgba(255, 255, 255, 0.45)', backdropFilter: 'blur(12px)', padding: '60px 80px', borderRadius: '30px', boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)', width: '450px', textAlign: 'center', position: 'relative', transition: 'all 0.3s ease' };
     const inputStyle = { width: '100%', padding: '15px 20px', margin: '10px 0 20px 0', borderRadius: '10px', border: '1px solid #ccc', fontSize: '16px', boxSizing: 'border-box', backgroundColor: 'white' };
     const submitButtonStyle = { backgroundColor: '#e67e22', color: 'white', border: 'none', borderRadius: '10px', padding: '15px', fontSize: '18px', fontWeight: 'bold', width: '100%', cursor: 'pointer', transition: 'background-color 0.3s' };
     const linkStyle = { color: '#3498db', textDecoration: 'none', fontSize: '14px', cursor: 'pointer' };
-    const modalOverlayStyle = { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 };
-    const modalCardStyle = { backgroundColor: 'rgba(255, 255, 255, 0.75)', backdropFilter: 'blur(15px)', padding: '40px', borderRadius: '20px', textAlign: 'center', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)', maxWidth: '380px' };
-    const modalIconStyle = (color) => ({ fontSize: '60px', color: color, marginBottom: '20px' });
-    const modalTextStyle = { fontSize: '18px', color: '#333', marginBottom: '30px' };
+
+    // Hàm lấy nội dung thông báo
+    const getModalContent = () => {
+        switch(modalState) {
+            case 'success': return {text: 'Liên kết đã được gửi!' };
+            case 'errorEmailFormat': return {text: 'Email không hợp lệ' };
+            case 'errorPasswordStrength': return {text: 'Mật khẩu cần cả chữ và số' };
+            case 'errorPassword': return {text: 'Sai mật khẩu' };
+            case 'errorAccountNotFound': return {text: 'Không tìm thấy tài khoản' };
+            default: return {text: '' };
+        }
+    };
+
+    const content = getModalContent();
 
     return (
         <div style={pageStyle}>
-            {/* Pop-up */}
-            {modalState !== 'none' && (
-                <div style={modalOverlayStyle} onClick={() => setModalState('none')}>
-                    <div style={modalCardStyle} onClick={e => e.stopPropagation()}>
-                        {modalState === 'success' && (<><div style={modalIconStyle('#2ecc71')}>✓</div><p style={modalTextStyle}>Liên kết đặt lại mật khẩu đã được gửi đến email.</p><button style={{...submitButtonStyle, width: 'auto', padding: '10px 40px'}} onClick={() => setModalState('none')}>OK</button></>)}
-                        {modalState === 'errorPassword' && (<><div style={modalIconStyle('#e74c3c')}>✕</div><p style={modalTextStyle}>Sai mật khẩu</p><button style={{...submitButtonStyle, width: 'auto', padding: '10px 40px'}} onClick={() => setModalState('none')}>Thử lại</button></>)}
-                        {modalState === 'errorAccountNotFound' && (<><div style={modalIconStyle('#e74c3c')}>✕</div><p style={modalTextStyle}>Tài khoản đăng nhập không tồn tại!</p><button style={{...submitButtonStyle, width: 'auto', padding: '10px 40px'}} onClick={() => setModalState('none')}>Thử lại</button></>)}
-                    </div>
-                </div>
-            )}
+            {/* Thanh thông báo Toast (Tự ẩn sau 3s) */}
+            <div style={toastStyle}>
+                <span style={{fontSize: '24px'}}>{content.icon}</span>
+                <span style={{fontSize: '15px', fontWeight: '600', color: '#333'}}>{content.text}</span>
+                <div
+                    onClick={() => setModalState('none')}
+                    style={{marginLeft: '10px', cursor: 'pointer', color: '#999', fontWeight: 'bold'}}
+                >✕</div>
+            </div>
 
-            {/* Form Card */}
             <div style={formCardStyle}>
                 <div style={{fontSize: '50px', marginBottom: '15px'}}>🏨</div>
-                <div style={{fontSize: '12px', color: '#666', marginBottom: '25px'}}>UEH BOUTIQUE HOTEL</div>
+                <div style={{fontSize: '12px', color: '#666', marginBottom: '25px', fontWeight: 'bold', letterSpacing: '1px'}}>UEH BOUTIQUE HOTEL</div>
 
                 {currentScreen === 'login' ? (
                     <form onSubmit={handleLogin}>
                         <h2 style={{textTransform: 'uppercase', marginBottom: '35px', color: '#333'}}>CHÀO MỪNG TRỞ LẠI!</h2>
                         <div style={{textAlign: 'left'}}>
                             <label style={{color: 'red', fontSize: '14px', fontWeight: 'bold'}}>Email *</label>
-                            <input type="email" style={inputStyle} placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+                            <input type="text" style={inputStyle} placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
                             <label style={{color: 'red', fontSize: '14px', fontWeight: 'bold'}}>Mật khẩu *</label>
                             <div style={{position: 'relative'}}>
-                                <input type={showPassword ? 'text' : 'password'} style={inputStyle} placeholder="Mật khẩu" value={password} onChange={e => setPassword(e.target.value)} required />
+                                <input type={showPassword ? 'text' : 'password'} style={inputStyle} placeholder="Mật khẩu (Gồm chữ và số)" value={password} onChange={e => setPassword(e.target.value)} required />
                                 <span style={{position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: '#999', fontSize: '20px'}} onClick={() => setShowPassword(!showPassword)}>{showPassword ? '👁️' : '👁️‍🗨️'}</span>
                             </div>
                         </div>
@@ -80,7 +158,7 @@ function Login() {
                             <h2 style={{textTransform: 'uppercase', marginBottom: '35px', color: '#333'}}>QUÊN MẬT KHẨU?</h2>
                             <div style={{textAlign: 'left'}}>
                                 <label style={{color: 'red', fontSize: '14px', fontWeight: 'bold'}}>Email của bạn *</label>
-                                <input type="email" style={inputStyle} placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+                                <input type="text" style={inputStyle} placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
                             </div>
                             <button type="submit" style={submitButtonStyle}>Đặt lại mật khẩu</button>
                         </form>
@@ -91,4 +169,4 @@ function Login() {
     );
 }
 
-export default Login; // Đổi tên xuất ra là Login
+export default Login;
