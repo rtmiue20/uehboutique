@@ -58,9 +58,6 @@ function BookingInfo() {
             .catch(error => console.error("Lỗi khi tải danh sách Phòng:", error));
     };
 
-    // ==========================================
-    // CẬP NHẬT LOGIC TOAST
-    // ==========================================
     const triggerStackedToast = (type, title, description) => {
         const id = Date.now();
         const newToast = { id, type, title, description };
@@ -197,19 +194,26 @@ function BookingInfo() {
     const tdStyle = { padding: '15px 10px', textAlign: 'center', borderBottom: '1px solid #eee', fontSize: '13px' };
 
     return (
-        <div style={{ padding: '20px', fontFamily: "'Segoe UI', Tahoma, sans-serif", position: 'relative', minHeight: '95vh' }}>
+        <div style={{ padding: '30px', fontFamily: "'Segoe UI', Tahoma, sans-serif", backgroundColor: '#f5f7f9', minHeight: '100vh', position: 'relative' }}>
 
-            {/* ==========================================
-                JSX TOAST NÂNG CẤP (THEO HÌNH MẪU)
-            ========================================== */}
+            {/* HEADER MỚI (BANNER) */}
+            <div style={bannerStyle}>
+                <h1 style={{ color: '#125c61', margin: 0, fontSize: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
+                    <i className="fa-solid fa-table" style={{fontSize: '28px'}}></i> QUẢN LÝ ĐẶT PHÒNG & THÔNG TIN KHÁCH HÀNG
+
+                </h1>
+                <div style={{ width: '50px', height: '3px', backgroundColor: '#f39c12', margin: '15px auto' }}></div>
+                <p style={{ color: '#7f8c8d', fontSize: '13px', margin: 0, fontWeight: '500', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+                    UEH BOUTIQUE HOTEL • DỮ LIỆU LƯU TRÚ HỆ THỐNG
+                </p>
+            </div>
+
+            {/* TOAST SYSTEM */}
             {toasts.length > 0 && (
                 <div style={toastContainerStyle}>
                     {toasts.map(t => (
                         <div key={t.id} style={toastItemStyle}>
-                            <div style={{
-                                ...toastIconContainerStyle,
-                                backgroundColor: t.type === 'success' ? '#2ecc71' : '#e74c3c'
-                            }}>
+                            <div style={{ ...toastIconContainerStyle, backgroundColor: t.type === 'success' ? '#2ecc71' : '#e74c3c' }}>
                                 {t.type === 'success' ? '✔' : '✖'}
                             </div>
                             <div style={toastContentStyle}>
@@ -217,40 +221,36 @@ function BookingInfo() {
                                 <div style={toastDescriptionStyle}>{t.description}</div>
                             </div>
                             <button onClick={() => removeToast(t.id)} style={toastCloseBtnStyle}>✕</button>
-
-                            {/* Thanh Progress chạy ngầm bên dưới */}
-                            <div style={{
-                                ...toastProgressStyle,
-                                backgroundColor: t.type === 'success' ? '#2ecc71' : '#e74c3c',
-                            }} />
+                            <div style={{ ...toastProgressStyle, backgroundColor: t.type === 'success' ? '#2ecc71' : '#e74c3c' }} />
                         </div>
                     ))}
                 </div>
             )}
 
-            {/* Phần Search và Table giữ nguyên */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '15px' }}>
                 {showSearchBox && (
                     <input
-                        type="text" placeholder="🔍 Tìm SĐT..." value={searchPhone}
+                        type="text" placeholder="Tìm theo SĐT..." value={searchPhone}
                         onChange={(e) => { setSearchPhone(e.target.value); setCurrentPage(1); }}
-                        style={{ padding: '8px 15px', borderRadius: '20px', border: '1px solid #125c61', marginRight: '10px', outline: 'none' }}
+                        style={{ padding: '10px 18px', borderRadius: '25px', border: '1px solid #125c61', marginRight: '10px', outline: 'none', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}
                     />
                 )}
-                <button onClick={() => setShowSearchBox(!showSearchBox)} style={btnSearchStyle}>🔍</button>
+                <button onClick={() => setShowSearchBox(!showSearchBox)} style={btnSearchStyle}>
+                    <i className="fa-solid fa-magnifying-glass"></i>
+                </button>
             </div>
 
-            <div style={{ backgroundColor: 'white', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 8px rgba(0,0,0,0.05)' }}>
+            <div style={{ backgroundColor: 'white', borderRadius: '15px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead style={{ backgroundColor: '#83b5b7', color: '#1a4e52' }}>
                     <tr>
-                        <th style={thStyle}>MÃ KHÁCH HÀNG</th>
+                        <th style={thStyle}>MÃ KH</th>
                         <th style={{ ...thStyle, textAlign: 'left' }}>TÊN KHÁCH HÀNG</th>
                         <th style={thStyle}>SỐ ĐIỆN THOẠI</th>
                         <th style={thStyle}>CHECK IN</th>
                         <th style={thStyle}>CHECK OUT</th>
                         <th style={thStyle}>PHÒNG</th>
-                        <th style={thStyle}>THANH TOÁN</th>
+                        <th style={thStyle}>TRẠNG THÁI</th>
                         <th style={thStyle}>XUẤT BILL</th>
                         <th style={thStyle}>SỬA</th>
                     </tr>
@@ -259,7 +259,7 @@ function BookingInfo() {
                     {currentBookings.map((booking, index) => {
                         const isPaid = booking.status === 'Check-out' || booking.status === 'Checked-out';
                         return (
-                            <tr key={booking.bookingId || index}>
+                            <tr key={booking.bookingId || index} style={{ transition: '0.2s' }}>
                                 <td style={{ ...tdStyle, fontWeight: 'bold' }}>{booking.guest?.guestId}</td>
                                 <td style={{ ...tdStyle, textAlign: 'left' }}>{booking.guest?.guestName}</td>
                                 <td style={tdStyle}>{booking.guest?.phone}</td>
@@ -269,14 +269,20 @@ function BookingInfo() {
                                 <td style={tdStyle}>
                                     <span style={{
                                         color: isPaid ? '#2ecc71' : '#e74c3c', fontWeight: 'bold',
-                                        padding: '4px 10px', borderRadius: '20px',
-                                        backgroundColor: isPaid ? '#eafaf1' : '#fceae8', fontSize: '12px'
+                                        padding: '5px 12px', borderRadius: '20px',
+                                        backgroundColor: isPaid ? '#eafaf1' : '#fceae8', fontSize: '11px'
                                     }}>
-                                        {isPaid ? 'Đã hoàn thành' : 'Chưa thanh toán'}
+                                        {isPaid ? 'Hoàn thành' : 'Chưa thanh toán'}
                                     </span>
                                 </td>
-                                <td style={tdStyle}><button onClick={() => handleInvoiceClick(booking)} style={btnInvoiceStyle}>Invoice</button></td>
-                                <td style={tdStyle}><span onClick={() => openEditModal(booking.guest)} style={{ cursor: 'pointer', fontSize: '18px' }}>✏️</span></td>
+                                <td style={tdStyle}>
+                                    <button onClick={() => handleInvoiceClick(booking)} style={btnInvoiceStyle}>Invoice</button>
+                                </td>
+                                <td style={tdStyle}>
+                                    <span onClick={() => openEditModal(booking.guest)} style={{ cursor: 'pointer', fontSize: '16px', color: '#125c61' }}>
+                                        <i className="fa-solid fa-pen-to-square"></i>
+                                    </span>
+                                </td>
                             </tr>
                         );
                     })}
@@ -284,21 +290,26 @@ function BookingInfo() {
                 </table>
             </div>
 
-            {/* Pagination & Modals giữ nguyên */}
+            {/* Pagination */}
             {totalPages > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '25px', gap: '8px' }}>
                     {[...Array(totalPages)].map((_, i) => (
-                        <button key={i + 1} onClick={() => paginate(i + 1)} style={{ ...btnPageStyle, backgroundColor: currentPage === i + 1 ? '#125c61' : 'transparent', color: currentPage === i + 1 ? 'white' : '#125c61', border: '1px solid #125c61', borderRadius: '4px' }} >{i + 1}</button>
+                        <button key={i + 1} onClick={() => paginate(i + 1)} style={{ ...btnPageStyle, backgroundColor: currentPage === i + 1 ? '#125c61' : 'white', color: currentPage === i + 1 ? 'white' : '#125c61' }} >{i + 1}</button>
                     ))}
                 </div>
             )}
 
-            <button onClick={openAddModal} style={fabStyle} title="Thêm khách & Đặt phòng mới">+</button>
+            {/* Nút FAB Thêm mới */}
+            <button onClick={openAddModal} style={fabStyle} title="Thêm khách & Đặt phòng mới">
+                <i className="fa-solid fa-circle-plus"></i>
+            </button>
 
+            {/* Guest Modal */}
             {showGuestModal && (
                 <div style={overlayStyle}>
                     <div style={modalStyle}>
-                        <h3 style={{ color: '#125c61', marginTop: 0 }}>{isEditing ? '📝 Sửa Khách Hàng' : '🛎️ Đặt Phòng Mới'}</h3>
+                        <h3 style={{ color: '#125c61', marginTop: 0 }}>
+                            {isEditing ? '📝 Sửa Khách Hàng' : '🛎️ Đặt Phòng Mới'}</h3>
                         <form onSubmit={handleSaveGuest}>
                             <div style={{ marginBottom: '10px' }}><label style={labelStyle}>Họ và Tên (*):</label><input type="text" required style={inputStyle} value={guestForm.guestName} onChange={e => setGuestForm({ ...guestForm, guestName: e.target.value })} /></div>
                             <div style={{ marginBottom: '10px' }}><label style={labelStyle}>CCCD/Passport (*):</label><input type="text" required style={inputStyle} value={guestForm.idCard} onChange={e => setGuestForm({ ...guestForm, idCard: e.target.value })} /></div>
@@ -334,6 +345,7 @@ function BookingInfo() {
                 </div>
             )}
 
+            {/* Bill Modal */}
             {showBill && invoiceData && (
                 <div style={overlayStyle}>
                     <div style={billModalStyle}>
@@ -373,65 +385,36 @@ function BookingInfo() {
                 </div>
             )}
 
-            {/* Tích hợp CSS Animation cho Toast */}
             <style>
                 {`
-                    @keyframes toastProgress {
-                        from { width: 100%; }
-                        to { width: 0%; }
-                    }
+                    @keyframes toastProgress { from { width: 100%; } to { width: 0%; } }
+                    tbody tr:hover { backgroundColor: #f9f9f9; }
                 `}
             </style>
         </div>
     );
 }
 
-// --- CẬP NHẬT STYLES CHO TOAST (THEO HÌNH MẪU) ---
-const toastContainerStyle = {
-    position: 'fixed', top: '20px', right: '20px',
-    display: 'flex', flexDirection: 'column', gap: '12px',
-    zIndex: 9999, width: '320px'
-};
-
-const toastItemStyle = {
-    display: 'flex', alignItems: 'center',
-    backgroundColor: '#fff', padding: '12px 16px',
-    borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-    position: 'relative', overflow: 'hidden',
-    borderLeft: 'none' // Bỏ viền cũ, dùng icon và thanh progress
-};
-
-const toastIconContainerStyle = {
-    width: '28px', height: '28px', borderRadius: '50%',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    color: '#fff', fontSize: '14px', marginRight: '15px', flexShrink: 0
-};
-
+// --- STYLES ---
+const bannerStyle = { backgroundColor: 'white', padding: '30px 25px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', marginBottom: '30px', textAlign: 'center' };
+const toastContainerStyle = { position: 'fixed', top: '20px', right: '20px', display: 'flex', flexDirection: 'column', gap: '12px', zIndex: 9999, width: '320px' };
+const toastItemStyle = { display: 'flex', alignItems: 'center', backgroundColor: '#fff', padding: '12px 16px', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', position: 'relative', overflow: 'hidden' };
+const toastIconContainerStyle = { width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', marginRight: '15px', flexShrink: 0 };
 const toastContentStyle = { flex: 1 };
 const toastTitleStyle = { fontWeight: 'bold', fontSize: '14px', color: '#333' };
 const toastDescriptionStyle = { fontSize: '12px', color: '#666', marginTop: '2px' };
+const toastCloseBtnStyle = { background: 'none', border: 'none', fontSize: '14px', color: '#ccc', cursor: 'pointer', marginLeft: '10px' };
+const toastProgressStyle = { position: 'absolute', bottom: 0, left: 0, height: '3px', width: '100%', animation: 'toastProgress 5s linear forwards' };
 
-const toastCloseBtnStyle = {
-    background: 'none', border: 'none', fontSize: '14px',
-    color: '#ccc', cursor: 'pointer', marginLeft: '10px'
-};
-
-const toastProgressStyle = {
-    position: 'absolute', bottom: 0, left: 0,
-    height: '3px', width: '100%',
-    animation: 'toastProgress 5s linear forwards'
-};
-
-// --- STYLES CÒN LẠI GIỮ NGUYÊN ---
-const btnSearchStyle = { backgroundColor: '#f39c12', color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', fontSize: '18px' };
+const btnSearchStyle = { backgroundColor: '#f39c12', color: 'white', border: 'none', borderRadius: '50%', width: '45px', height: '45px', cursor: 'pointer', fontSize: '18px', boxShadow: '0 4px 10px rgba(243, 156, 18, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' };
 const btnInvoiceStyle = { padding: '6px 12px', backgroundColor: '#125c61', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' };
-const btnPageStyle = { border: 'none', padding: '5px 12px', cursor: 'pointer', fontWeight: 'bold' };
+const btnPageStyle = { border: '1px solid #125c61', padding: '6px 14px', cursor: 'pointer', fontWeight: 'bold', borderRadius: '4px', transition: '0.2s' };
 const overlayStyle = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 };
 const billModalStyle = { position: 'relative', backgroundColor: 'white', padding: '40px', borderRadius: '8px', width: '480px', color: '#333', boxShadow: '0 5px 20px rgba(0,0,0,0.3)' };
 const closeBtnStyle = { position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', fontSize: '20px', fontWeight: 'bold', color: '#aaa', cursor: 'pointer' };
-const btnActionStyle = { flex: 1, padding: '12px', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px' };
-const fabStyle = { position: 'fixed', bottom: '40px', right: '40px', width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#f39c12', color: 'white', fontSize: '30px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.3)', zIndex: 999 };
-const modalStyle = { backgroundColor: 'white', padding: '30px', borderRadius: '15px', width: '380px' };
+const btnActionStyle = { flex: 1, padding: '12px', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' };
+const fabStyle = { position: 'fixed', bottom: '40px', right: '40px', width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#f39c12', color: 'white', fontSize: '24px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.3)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const modalStyle = { backgroundColor: 'white', padding: '30px', borderRadius: '15px', width: '380px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' };
 const inputStyle = { width: '100%', padding: '10px', marginTop: '5px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' };
 const labelStyle = { fontSize: '14px', fontWeight: '600' };
 const btnModalStyle = { flex: 1, padding: '12px', border: 'none', borderRadius: '8px', color: 'white', fontWeight: 'bold', cursor: 'pointer' };

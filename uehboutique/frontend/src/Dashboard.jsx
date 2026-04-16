@@ -150,7 +150,7 @@ function Dashboard() {
                     <small>Lượt khách dự kiến</small>
                 </div>
 
-                {/* --- BOX ẢNH CHẠY (THAY THẾ DOANH THU) --- */}
+                {/* --- BOX ẢNH CHẠY --- */}
                 <div style={{ ...cardStyle, padding: 0, overflow: 'hidden', position: 'relative', minHeight: '140px' }}>
                     <div style={{
                         width: '100%', height: '100%',
@@ -167,7 +167,6 @@ function Dashboard() {
                             <span style={{ fontSize: '12px', opacity: 0.9 }}>{slides[currentSlide].desc}</span>
                         </div>
                     </div>
-                    {/* Chấm nhỏ điều hướng */}
                     <div style={{ position: 'absolute', bottom: '10px', right: '10px', display: 'flex', gap: '5px' }}>
                         {slides.map((_, i) => (
                             <div key={i} style={{
@@ -222,12 +221,20 @@ function Dashboard() {
                 <div style={sectionStyle}>
                     <h3 style={{ marginTop: 0, color: '#333' }}>Thao tác nhanh</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
-                        <button style={quickBtnStyle} onClick={() => window.location.href = '/booking'}>➕ Tạo Booking Mới</button>
-                        <button style={{ ...quickBtnStyle, backgroundColor: '#83b5b7' }} onClick={() => window.location.href = '/rooms'}>🏨 Xem Sơ Đồ Phòng</button>
-                        <button style={{ ...quickBtnStyle, backgroundColor: '#95a5a6' }} onClick={() => window.location.href = '/invoices'}>📑 Xuất Báo Cáo Tháng</button>
+                        <button style={quickBtnStyle} onClick={() => window.location.href = '/booking'}>
+                            <i className="fa-solid fa-circle-plus" style={{marginRight: '8px'}}></i> Tạo Booking Mới
+                        </button>
+                        <button style={{ ...quickBtnStyle, backgroundColor: '#83b5b7' }} onClick={() => window.location.href = '/rooms'}>
+                            <i className="fa-solid fa-hotel" style={{marginRight: '8px'}}></i> Xem Sơ Đồ Phòng
+                        </button>
+                        <button style={{ ...quickBtnStyle, backgroundColor: '#95a5a6' }} onClick={() => window.location.href = '/invoices'}>
+                            <i className="fa-solid fa-file-invoice" style={{marginRight: '10px'}}></i> Xuất Báo Cáo Tháng
+                        </button>
                     </div>
                     <div style={{ marginTop: '30px', padding: '15px', backgroundColor: '#eef2f3', borderRadius: '8px' }}>
-                        <p style={{ fontSize: '13px', color: '#555', margin: 0 }}><b>💡 Ghi chú:</b> Hệ thống tự động đồng bộ dữ liệu mỗi khi có khách Check-in tại quầy.</p>
+                        <p style={{ fontSize: '13px', color: '#555', margin: 0 }}>
+                            <b><i className="fa-regular fa-lightbulb" style={{marginRight: '5px'}}></i> Ghi chú:</b> Hệ thống tự động đồng bộ dữ liệu mỗi khi có khách Check-in tại quầy.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -243,7 +250,8 @@ const sectionStyle = { backgroundColor: 'white', padding: '25px', borderRadius: 
 const roomBadgeStyle = { backgroundColor: '#125c61', color: 'white', padding: '4px 10px', borderRadius: '4px', fontWeight: 'bold' };
 const quickBtnStyle = {
     padding: '12px', backgroundColor: '#f39c12', color: 'white', border: 'none',
-    borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', textAlign: 'left', transition: '0.3s'
+    borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', textAlign: 'left', transition: '0.3s',
+    display: 'flex', alignItems: 'center'
 };
 
 export default Dashboard;

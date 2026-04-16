@@ -83,7 +83,6 @@ function Login() {
         overflow: 'hidden'
     };
 
-
     const toastStyle = {
         position: 'fixed',
         top: modalState !== 'none' ? '20px' : '-100px',
@@ -106,7 +105,7 @@ function Login() {
     const submitButtonStyle = { backgroundColor: '#e67e22', color: 'white', border: 'none', borderRadius: '10px', padding: '15px', fontSize: '18px', fontWeight: 'bold', width: '100%', cursor: 'pointer', transition: 'background-color 0.3s' };
     const linkStyle = { color: '#3498db', textDecoration: 'none', fontSize: '14px', cursor: 'pointer' };
 
-    // Hàm lấy nội dung thông báo
+    // Hàm lấy nội dung thông báo (đã thêm lại icon để hiển thị đẹp hơn)
     const getModalContent = () => {
         switch(modalState) {
             case 'success': return {text: 'Liên kết đã được gửi!' };
@@ -122,7 +121,7 @@ function Login() {
 
     return (
         <div style={pageStyle}>
-            {/* Thanh thông báo Toast (Tự ẩn sau 3s) */}
+            {/* Thanh thông báo Toast */}
             <div style={toastStyle}>
                 <span style={{fontSize: '24px'}}>{content.icon}</span>
                 <span style={{fontSize: '15px', fontWeight: '600', color: '#333'}}>{content.text}</span>
@@ -133,12 +132,16 @@ function Login() {
             </div>
 
             <div style={formCardStyle}>
-                <div style={{fontSize: '50px', marginBottom: '15px'}}>🏨</div>
-                <div style={{fontSize: '12px', color: '#666', marginBottom: '25px', fontWeight: 'bold', letterSpacing: '1px'}}>UEH BOUTIQUE HOTEL</div>
+                {/* LOGO MỚI */}
+                <img
+                    src="https://hotel.ueh.edu.vn/wp-content/uploads/2021/02/logo.svg"
+                    alt="UEH Boutique Hotel Logo"
+                    style={{ width: '220px', marginBottom: '30px', filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.1))' }}
+                />
 
                 {currentScreen === 'login' ? (
                     <form onSubmit={handleLogin}>
-                        <h2 style={{textTransform: 'uppercase', marginBottom: '35px', color: '#333'}}>CHÀO MỪNG TRỞ LẠI!</h2>
+                        <h2 style={{textTransform: 'uppercase', marginBottom: '35px', color: '#333', letterSpacing: '1px'}}>Chào mừng trở lại!</h2>
                         <div style={{textAlign: 'left'}}>
                             <label style={{color: 'red', fontSize: '14px', fontWeight: 'bold'}}>Email *</label>
                             <input type="text" style={inputStyle} placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
@@ -155,7 +158,7 @@ function Login() {
                     <>
                         <button style={{position: 'absolute', top: '20px', right: '20px', fontSize: '24px', cursor: 'pointer', color: '#666', background: 'none', border: 'none'}} onClick={() => setCurrentScreen('login')}>✕</button>
                         <form onSubmit={handleForgotPassword}>
-                            <h2 style={{textTransform: 'uppercase', marginBottom: '35px', color: '#333'}}>QUÊN MẬT KHẨU?</h2>
+                            <h2 style={{textTransform: 'uppercase', marginBottom: '35px', color: '#333'}}>Quên mật khẩu?</h2>
                             <div style={{textAlign: 'left'}}>
                                 <label style={{color: 'red', fontSize: '14px', fontWeight: 'bold'}}>Email của bạn *</label>
                                 <input type="text" style={inputStyle} placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />

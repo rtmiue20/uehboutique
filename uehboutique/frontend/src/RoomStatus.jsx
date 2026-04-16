@@ -75,10 +75,9 @@ function RoomStatus() {
 
     // --- HÀM THÊM THÔNG BÁO MỚI VÀO MẢNG ---
     const addToast = (message) => {
-        const id = Date.now(); // Tạo ID duy nhất bằng thời gian hiện tại
+        const id = Date.now();
         setToasts(prevToasts => [...prevToasts, { id, message }]);
 
-        // Tự động xóa thông báo này sau 3 giây dựa vào ID
         setTimeout(() => {
             setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
         }, 3000);
@@ -107,8 +106,6 @@ function RoomStatus() {
             });
 
             setRooms(updatedRooms);
-
-            // Gọi hàm addToast thay vì setToastMessage như cũ
             addToast(`Đã điều phối nhân viên dọn dẹp cho phòng ${selectedRoom.roomNumber}!`);
             setShowCleanModal(false);
 
@@ -157,12 +154,14 @@ function RoomStatus() {
                 `}
             </style>
 
+            {/* --- HEADER ĐÃ ĐƯỢC CẬP NHẬT --- */}
             <div style={bannerStyle}>
-                <h1 style={{ color: '#125c61', margin: 0, fontSize: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                    🏨 ĐIỀU PHỐI PHÒNG
+                <h1 style={{ color: '#125c61', margin: 0, fontSize: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
+                    <i className="fa-solid fa-hotel" style={{fontSize: '28px'}}></i> TRUNG TÂM QUẢN TRỊ TRẠNG THÁI PHÒNG
                 </h1>
-                <p style={{ color: '#7f8c8d', fontSize: '15px', marginTop: '8px', marginBottom: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    HOTEL UEH BOUTIQUE - HỆ THỐNG ĐIỀU PHỐI THÔNG MINH
+                <div style={{ width: '60px', height: '3px', backgroundColor: '#f39c12', margin: '15px auto' }}></div>
+                <p style={{ color: '#7f8c8d', fontSize: '14px', marginTop: '8px', marginBottom: 0, fontWeight: '500', letterSpacing: '2px' }}>
+                    UEH BOUTIQUE HOTEL • HỆ THỐNG VẬN HÀNH THÔNG MINH
                 </p>
             </div>
 
@@ -197,7 +196,7 @@ function RoomStatus() {
                         {showSearchBox && (
                             <input
                                 type="text"
-                                placeholder="🔍 Nhập số phòng... (VD: 101)"
+                                placeholder="Nhập số phòng..."
                                 value={searchRoomNumber}
                                 onChange={(e) => setSearchRoomNumber(e.target.value)}
                                 style={{
@@ -215,13 +214,13 @@ function RoomStatus() {
                             style={{
                                 backgroundColor: '#f39c12', color: 'white', border: 'none',
                                 borderRadius: '50%', width: '45px', height: '45px',
-                                cursor: 'pointer', fontSize: '20px', boxShadow: '0 5px 10px rgba(0,0,0,0.15)',
+                                cursor: 'pointer', fontSize: '18px', boxShadow: '0 5px 10px rgba(0,0,0,0.15)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.2s'
                             }}
                             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
                             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                         >
-                            🔍
+                            <i className="fa-solid fa-magnifying-glass"></i>
                         </button>
                     </div>
                 </div>
@@ -362,57 +361,16 @@ function RoomStatus() {
 }
 
 // --- CÁC BIẾN STYLE DÙNG CHUNG ---
-const bannerStyle = { backgroundColor: 'white', padding: '25px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', marginBottom: '30px', textAlign: 'center' };
+const bannerStyle = { backgroundColor: 'white', padding: '30px 25px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', marginBottom: '30px', textAlign: 'center' };
 const cardStyle = { backgroundColor: 'white', padding: '40px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' };
 
 const modalOverlayStyle = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 };
 const modalContentStyle = { backgroundColor: 'white', padding: '30px', borderRadius: '15px', width: '380px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' };
 const closeBtnStyle = { marginTop: '25px', padding: '12px 20px', backgroundColor: '#125c61', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', width: '100%', fontWeight: 'bold', fontSize: '14px' };
 
-// --- STYLE CHO HỆ THỐNG TOAST XẾP CHỒNG ---
-const toastContainerStyle = {
-    position: 'fixed',
-    top: '30px',
-    right: '30px',
-    display: 'flex',
-    flexDirection: 'column', // Xếp chồng từ trên xuống dưới
-    gap: '15px', // Khoảng cách giữa các cục toast
-    zIndex: 9999,
-};
-
-const toastNotificationStyle = {
-    backgroundColor: '#ffffff',
-    padding: '16px 24px 16px 16px',
-    borderRadius: '12px',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    overflow: 'hidden',
-    position: 'relative', // Để cái progress bar bám vào bottom
-    animation: 'slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards',
-    transition: 'all 0.3s ease', // Hiệu ứng đẩy lên mượt mà khi cái trên cùng biến mất
-    minWidth: '320px'
-};
-
-const iconWrapperStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '38px',
-    height: '38px',
-    backgroundColor: '#2ecc71',
-    borderRadius: '50%',
-    boxShadow: '0 4px 10px rgba(46, 204, 113, 0.4)'
-};
-
-const progressBarStyle = {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    height: '4px',
-    backgroundColor: '#2ecc71',
-    animation: 'progressShrink 3s linear forwards'
-};
+const toastContainerStyle = { position: 'fixed', top: '30px', right: '30px', display: 'flex', flexDirection: 'column', gap: '15px', zIndex: 9999 };
+const toastNotificationStyle = { backgroundColor: '#ffffff', padding: '16px 24px 16px 16px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '16px', overflow: 'hidden', position: 'relative', animation: 'slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards', transition: 'all 0.3s ease', minWidth: '320px' };
+const iconWrapperStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '38px', height: '38px', backgroundColor: '#2ecc71', borderRadius: '50%', boxShadow: '0 4px 10px rgba(46, 204, 113, 0.4)' };
+const progressBarStyle = { position: 'absolute', bottom: 0, left: 0, height: '4px', backgroundColor: '#2ecc71', animation: 'progressShrink 3s linear forwards' };
 
 export default RoomStatus;

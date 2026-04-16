@@ -65,8 +65,12 @@ function InvoiceManager() {
 
             {/* --- HEADING GIỐNG SERVICEMANAGER --- */}
             <div style={bannerStyle}>
-                <h1 style={{ color: '#125c61', margin: 0 }}>📑 LỊCH SỬ HÓA ĐƠN</h1>
-                <p style={{ color: '#7f8c8d', fontSize: '14px', marginTop: '5px', marginBottom: 0 }}>
+                <h1 style={{ color: '#125c61', margin: 0, fontSize: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
+                    <i className="fa-solid fa-file-invoice" style={{fontSize: '28px'}}></i> LỊCH SỬ HÓA ĐƠN
+                </h1>
+                <div style={{ width: '60px', height: '3px', backgroundColor: '#f39c12', margin: '15px auto' }}></div>
+                <p style={{ color: '#7f8c8d', fontSize: '14px', marginTop: '8px', marginBottom: 0,
+                    fontWeight: '500', letterSpacing: '2px' }}>
                     HOTEL UEH BOUTIQUE - QUẢN LÝ HÓA ĐƠN
                 </p>
             </div>

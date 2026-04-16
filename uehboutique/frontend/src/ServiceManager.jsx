@@ -105,8 +105,14 @@ function ServiceManager() {
 
             {/* GIAO DIỆN CHÍNH */}
             <div style={bannerStyle}>
-                <h1 style={{ color: '#125c61', margin: 0 }}>🍽️ DỊCH VỤ & ORDER</h1>
-                <p style={{ color: '#7f8c8d', fontSize: '14px' }}>HOTEL UEH BOUTIQUE - QUẢN LÝ DỊCH VỤ</p>
+                <h1 style={{ color: '#125c61', margin: 0, fontSize: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
+                    <i className="fa-solid fa-utensils" style={{fontSize: '28px'}}></i> DỊCH VỤ & ORDER
+                </h1>
+                <div style={{ width: '60px', height: '3px', backgroundColor: '#f39c12', margin: '15px auto' }}></div>
+                <p style={{ color: '#7f8c8d', fontSize: '14px', marginTop: '8px', marginBottom: 0,
+                    fontWeight: '500', letterSpacing: '2px' }}>
+                    HOTEL UEH BOUTIQUE - QUẢN LÝ DỊCH
+                </p>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
