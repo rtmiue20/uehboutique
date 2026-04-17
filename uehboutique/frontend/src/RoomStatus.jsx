@@ -319,7 +319,7 @@ function RoomStatus() {
             {showCleanModal && selectedRoom && (
                 <div style={modalOverlayStyle}>
                     <div style={modalContentStyle}>
-                        <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>🧹 Điều phối lao công</h2>
+                        <h2 style={{ marginTop: 0, color: '#f39c12', borderBottom: '2px solid #eee', paddingBottom: '10px' }}><i className="fa-solid fa-broom"></i> Điều phối lao công</h2>
                         <p style={{ fontSize: '14px' }}>Chọn nhân viên dọn dẹp cho <b>Phòng {selectedRoom.roomNumber}</b>:</p>
                         <select style={{ width: '100%', padding: '12px', margin: '15px 0', borderRadius: '5px', border: '1px solid #ccc' }}>
                             {housekeepers.map(staff => (

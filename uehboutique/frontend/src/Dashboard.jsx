@@ -13,6 +13,9 @@ function Dashboard() {
     const [recentActivities, setRecentActivities] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // --- STATE CHO FEEDBACK MENU ---
+    const [showFeedbackMenu, setShowFeedbackMenu] = useState(false);
+
     // --- STATE CHO IMAGE SLIDER ---
     const [currentSlide, setCurrentSlide] = useState(0);
     const slides = [
@@ -128,7 +131,7 @@ function Dashboard() {
     if (loading) return <div style={{ padding: '20px' }}>Đang tải dữ liệu...</div>;
 
     return (
-        <div style={{ padding: '30px', backgroundColor: '#f4f7f6', minHeight: '100vh', fontFamily: "'Segoe UI', Tahoma, sans-serif" }}>
+        <div style={{ padding: '30px', backgroundColor: '#f4f7f6', minHeight: '100vh', fontFamily: "'Segoe UI', Tahoma, sans-serif", position: 'relative' }}>
             <h2 style={{ color: '#125c61', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 Tổng Quan Hệ Thống UEH Boutique
             </h2>
@@ -238,6 +241,28 @@ function Dashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* --- NÚT FEEDBACK Ở GÓC DƯỚI BÊN PHẢI --- */}
+            <div style={feedbackContainerStyle}>
+                {showFeedbackMenu && (
+                    <div style={feedbackMenuBoxStyle}>
+                        <a href="mailto:trieunguyen.31241027455@st.ueh.edu.vn" style={feedbackLinkStyle} target="_blank" rel="noopener noreferrer">
+                            <i className="fa-solid fa-envelope" style={{color: '#e74c3c', width: '20px', textAlign: 'center'}}></i> Gửi Email
+                        </a>
+                        <div style={{ width: '100%', height: '1px', backgroundColor: '#eee' }}></div>
+                        <a href="https://m.me/mt200206" style={feedbackLinkStyle} target="_blank" rel="noopener noreferrer">
+                            <i className="fa-brands fa-facebook-messenger" style={{color: '#0084ff', width: '20px', textAlign: 'center'}}></i> Messenger
+                        </a>
+                    </div>
+                )}
+                <button
+                    style={feedbackBtnStyle}
+                    onClick={() => setShowFeedbackMenu(!showFeedbackMenu)}
+                    title="Gửi Feedback"
+                >
+                    <i className="fa-solid fa-comment-dots"></i>
+                </button>
+            </div>
         </div>
     );
 }
@@ -252,6 +277,60 @@ const quickBtnStyle = {
     padding: '12px', backgroundColor: '#f39c12', color: 'white', border: 'none',
     borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', textAlign: 'left', transition: '0.3s',
     display: 'flex', alignItems: 'center'
+};
+
+// Styles mới cho Feedback
+const feedbackContainerStyle = {
+    position: 'fixed',
+    bottom: '30px',
+    right: '30px',
+    zIndex: 1000,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: '10px'
+};
+
+const feedbackMenuBoxStyle = {
+    backgroundColor: 'white',
+    padding: '8px',
+    borderRadius: '10px',
+    boxShadow: '0 5px 20px rgba(0,0,0,0.15)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '5px',
+    minWidth: '160px',
+    animation: 'fadeIn 0.2s ease-in-out'
+};
+
+const feedbackLinkStyle = {
+    textDecoration: 'none',
+    color: '#333',
+    fontSize: '14px',
+    fontWeight: '500',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '10px',
+    borderRadius: '6px',
+    transition: 'background-color 0.2s',
+    cursor: 'pointer'
+};
+
+const feedbackBtnStyle = {
+    backgroundColor: '#125c61',
+    color: 'white',
+    width: '55px',
+    height: '55px',
+    borderRadius: '50%',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '24px',
+    boxShadow: '0 4px 15px rgba(18, 92, 97, 0.4)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    transition: 'transform 0.2s'
 };
 
 export default Dashboard;

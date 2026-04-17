@@ -148,7 +148,9 @@ function Login() {
                             <label style={{color: 'red', fontSize: '14px', fontWeight: 'bold'}}>Mật khẩu *</label>
                             <div style={{position: 'relative'}}>
                                 <input type={showPassword ? 'text' : 'password'} style={inputStyle} placeholder="Mật khẩu (Gồm chữ và số)" value={password} onChange={e => setPassword(e.target.value)} required />
-                                <span style={{position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: '#999', fontSize: '20px'}} onClick={() => setShowPassword(!showPassword)}>{showPassword ? '👁️' : '👁️‍🗨️'}</span>
+                                <span style={{position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: '#999', fontSize: '20px'}} onClick={() => setShowPassword(!showPassword)}>
+                                    {showPassword ? <i className="fa-solid fa-eye"></i> : <i className="fa-solid fa-eye-slash"></i>}
+                                </span>
                             </div>
                         </div>
                         <div style={{textAlign: 'left', marginBottom: '35px'}}><a style={linkStyle} onClick={() => setCurrentScreen('forgotPassword')}>Quên mật khẩu?</a></div>

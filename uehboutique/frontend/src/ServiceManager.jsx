@@ -116,8 +116,8 @@ function ServiceManager() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                <button onClick={() => { setIsEditing(false); setServiceForm({serviceName:'', unitPrice:''}); setShowServiceModal(true); }} style={btnStyle}>➕ Thêm dịch vụ</button>
-                <button onClick={() => setShowOrderModal(true)} style={{ ...btnStyle, backgroundColor: '#f39c12' }}>🛎️ Gọi dịch vụ (Order)</button>
+                <button onClick={() => { setIsEditing(false); setServiceForm({serviceName:'', unitPrice:''}); setShowServiceModal(true); }} style={btnStyle}><i className="fa-solid fa-plus"></i> Thêm dịch vụ</button>
+                <button onClick={() => setShowOrderModal(true)} style={{ ...btnStyle, backgroundColor: '#f39c12' }}><i className="fa-solid fa-bell-concierge"></i> Gọi dịch vụ (Order)</button>
             </div>
 
             <div style={cardStyle}>
@@ -162,7 +162,7 @@ function ServiceManager() {
             {showOrderModal && (
                 <div style={modalOverlayStyle}>
                     <div style={modalContentStyle}>
-                        <h3 style={{ color: '#f39c12' }}>🛎️ Order Dịch Vụ</h3>
+                        <h3 style={{ color: '#f39c12' }}><i className="fa-solid fa-bell-concierge"></i> Order Dịch Vụ</h3>
                         <label style={labelStyle}>Phòng đang ở:</label>
                         <select style={inputStyle} onChange={e => setOrderForm({...orderForm, bookingId: e.target.value})}>
                             <option value="">-- Chọn phòng --</option>
