@@ -12,7 +12,7 @@
 ## Hướng dẫn cài đặt và chạy dự án
 
 ### 1. Chạy Back-end (Spring Boot)
-* Mở thư mục `backend` bằng IntelliJ IDEA.
+* Mở thư mục `src` bằng IntelliJ IDEA.
 * Cấu hình database MariaDB trong file `application.properties`:
   * `server.port=8080`
   * `spring.datasource.url=jdbc:mariadb://localhost:3306/ueh_boutique_db`
